@@ -1,26 +1,21 @@
 const aws = require('@pulumi/aws');
 
-// defaults
-aws.config.profile = `vorprog`;
-aws.config.region = aws.USWest2Region;
+const defaultProfile = `vorprog`;
 
-module.exports.us_west_2_provider = new aws.Provider(`us_west_2`, {
+module.exports.defaultProfile = defaultProfile;
+module.exports.defaultRegion = aws.USWest2Region;
+
+module.exports.us_west_2 = new aws.Provider(`us_west_2`, {
+  profile: defaultProfile,
   region: aws.USWest2Region,
 });
 
-/** @type { import('@pulumi/pulumi').InvokeOptions | import('@pulumi/pulumi').CustomResourceOptions } */
-module.exports.us_west_2 = { provider: this.us_west_2_provider };
-
-module.exports.us_east_1_provider = new aws.Provider(`us_east_1`, {
+module.exports.us_east_1 = new aws.Provider(`us_east_1`, {
+  profile: defaultProfile,
   region: aws.USEast1Region,
 });
 
-/** @type { import('@pulumi/pulumi').InvokeOptions | import('@pulumi/pulumi').CustomResourceOptions } */
-module.exports.us_east_1 = { provider: this.us_west_2_provider };
-
-module.exports.ap_south_1_provider = new aws.Provider(`ap_south_1`, {
+module.exports.ap_south_1 = new aws.Provider(`ap_south_1`, {
+  profile: defaultProfile,
   region: aws.APSouth1Region,
 });
-
-/** @type { import('@pulumi/pulumi').InvokeOptions | import('@pulumi/pulumi').CustomResourceOptions } */
-module.exports.ap_south_1 = { provider: this.us_west_2_provider };

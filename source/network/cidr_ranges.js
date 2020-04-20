@@ -1,0 +1,21 @@
+module.exports.us_west_2 = `10.101`;
+module.exports.us_east_1 = `10.102`;
+module.exports.ap_south_1 = `10.103`;
+
+module.exports.vpc = `.0.0/16`;
+module.exports.subnet1 = `.0.0/20`;
+module.exports.subnet2 = `.16.0/20`;
+module.exports.subnet3 = `.32.0/20`;
+module.exports.subnet4 = `.48.0/20`;
+module.exports.subnet5 = `.64.0/20`;
+module.exports.subnet6 = `.80.0/20`;
+module.exports.subnet7 = `.96.0/20`;
+module.exports.subnet8 = `.112.0/20`;
+module.exports.subnet8 = `.128.0/20`;
+module.exports.subnet9 = `.144.0/20`;
+module.exports.subnet10 = `.160.0/20`;
+module.exports.subnet10 = `.176.0/20`;
+module.exports.subnet11 = `.192.0/20`;
+module.exports.subnet12 = `.208.0/20`;
+module.exports.subnet13 = `.224.0/20`;
+module.exports.subnet14 = `.240.0/20`;
