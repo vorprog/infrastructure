@@ -1,16 +1,5 @@
 const aws = require('@pulumi/aws');
 
-const userResources = username => {
-  return {
-    user: new aws.iam.User(username, {}),
-    access_key: new aws.iam.AccessKey(username, {
-      user: username,
-    })
-  }
-};
-
-module.exports = {
-  user_1: userResources(`gwashington`),
-  user_2: userResources(`tjefferson`),
-  user_3: userResources(`alincoln`),
-};
+module.exports.user_1 = new aws.iam.User(`gwashington`, {});
+module.exports.user_2 = new aws.iam.User(`tjefferson`, {});
+module.exports.user_3 = new aws.iam.User(`alincoln`, {});
