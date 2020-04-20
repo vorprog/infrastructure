@@ -17,20 +17,11 @@ module.exports = async () => {
   const zones = require('./dns/zones');
   const records = require('./dns/records');
   const s3_buckets = require('./storage/buckets');
-  const secrets_keys = require('./encryption/secrets_keys');
   //#endregion
 
-  //#region NETWORK RESOURCES
-  const vpc_networks = require('./network/vpc_networks');
-  const peering_connection = require('./network/peering_connections');
-
-  // TODO: Unlikely this will work because async retrieval
-  const subnets = require('./network/subnets');
-  await subnets.init();
-
-  //#endregion
-
-  //#region COMPUTE RESOURCES
-  const clusters = require('./compute/clusters');
+  ////#region REGIONAL RESOURCES
+  const encryption_resources = require('./encryption');
+  const network_resources = require('./network');
+  const compute_resources = require('./compute');
   //#endregion
 };
