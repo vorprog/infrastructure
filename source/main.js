@@ -20,7 +20,7 @@ module.exports = async () => {
   const content_distribution_networks = require('./storage/content_distribution_networks');
   //#endregion
 
-  ////#region REGIONAL RESOURCES
+  //#region REGIONAL RESOURCES
   const encryption_resources = require('./encryption');
   const network_resources = require('./network');
   const compute_resources = require('./compute');
