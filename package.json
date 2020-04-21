@@ -1,17 +1,11 @@
 {
-  "name": "pulumi",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "vorprog-pulumi",
+  "main": "source/main.js",
   "scripts": {
-    "pulumi_login": "pulumi login --cloud-url https://s3.console.aws.amazon.com/s3/buckets/vorprog-pulumi/.pulumi",
+    "pulumi_login": "pulumi login file://.",
     "pulumi_get_passphrase": "sops --decrypt pulumi_secrets.yaml",
-    "pulumi_init": "pulumi stack init --secrets-provider=passphrase",
     "pulumi_up": "pulumi up"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@pulumi/aws": "^2.0.0-beta.3",
     "@pulumi/pulumi": "^1.14.1",
