@@ -17,6 +17,7 @@ module.exports = async () => {
   const zones = require('./dns/zones');
   const records = require('./dns/records');
   const s3_buckets = require('./storage/buckets');
+  const content_distribution_networks = require('./storage/content_distribution_networks');
   //#endregion
 
   ////#region REGIONAL RESOURCES
