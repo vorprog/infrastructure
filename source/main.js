@@ -1,12 +1,5 @@
-const aws = require('@pulumi/aws');
-
-module.exports = async () => {
-  const providers = require('./providers');
-  aws.config.profile = providers.defaultProfile;
-  aws.config.region = providers.defaultRegion;
-
-  const callerIdentity = await aws.getCallerIdentity();
-  process.env.AWS_ACCOUNT_ID = callerIdentity.accountId;
+const main = async () => {
+  const aws = require('@pulumi/aws');
 
   //#region GLOBAL RESOURCES
   const users = require('./iam/users');
@@ -24,3 +17,5 @@ module.exports = async () => {
   const compute_resources = require('./compute');
   //#endregion
 };
+
+main();
