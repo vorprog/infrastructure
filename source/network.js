@@ -6,6 +6,7 @@ module.exports.us_west_2_peering_connections = require('./regional/us-west-2/net
 module.exports.us_east_1_peering_connections = require('./regional/us-east-1/network/peering_connections');
 module.exports.ap_south_1_peering_connections = require('./regional/ap-south-1/network/peering_connections');
 
+// TODO: subnets calculate cidr from vpc cidr so a "wait" step may be needed here
 module.exports.us_west_2_subnets = require('./regional/us-west-2/network/subnets');
 module.exports.us_east_1_subnets = require('./regional/us-east-1/network/subnets');
 module.exports.ap_south_1_subnets = require('./regional/ap-south-1/network/subnets');
