@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pulumi_login": "pulumi login --cloud-url https://s3.console.aws.amazon.com/s3/buckets/vorprog-pulumi/.pulumi",
+    "pulumi_get_passphrase": "sops --decrypt pulumi_secrets.yaml",
+    "pulumi_init": "pulumi stack init --secrets-provider=passphrase",
+    "pulumi_up": "pulumi up"
   },
   "keywords": [],
   "author": "",

@@ -1,5 +1,3 @@
-// https://www.pulumi.com/docs/reference/pkg/nodejs/pulumi/aws
-const pulumi = require('@pulumi/pulumi');
 const aws = require('@pulumi/aws');
 
 module.exports = async () => {
