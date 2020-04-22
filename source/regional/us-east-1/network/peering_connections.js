@@ -9,11 +9,11 @@ module.exports.main____us_west_2_main = new aws.ec2.VpcPeeringConnection(`main__
   peerRegion: aws.USWest2Region.toString(),
   peerVpcId: us_west_2_vpc_networks.main.id,
   autoAccept: true,
-}, options.us_west_2);
+}, options.us_east_1);
 
 module.exports.main____ap_south_1_main = new aws.ec2.VpcPeeringConnection(`main____ap_south_1_main`, {
   vpcId: vpc_networks.main.id,
   peerRegion: aws.APSouth1Region.toString(),
   peerVpcId: ap_south_1_vpc_networks.main.id,
   autoAccept: true,
-}, options.us_west_2);
+}, options.us_east_1);
