@@ -1,21 +1,8 @@
-const main = async () => {
-  const aws = require('@pulumi/aws');
+const create = require('./create');
+const destroy = require('./destroy');
 
-  //#region GLOBAL RESOURCES
-  const users = require('./iam/users');
-  const roles = require('./iam/roles');
-  const user_policies = require('./iam/user_policies');
-  const zones = require('./dns/zones');
-  const records = require('./dns/records');
-  const s3_buckets = require('./storage/buckets');
-  const content_distribution_networks = require('./storage/content_distribution_networks');
-  //#endregion
-
-  //#region REGIONAL RESOURCES
-  const encryption_resources = require('./encryption');
-  const network_resources = require('./network');
-  const compute_resources = require('./compute');
-  //#endregion
-};
-
-main();
+(async () => {
+  const arguments = process.argv.slice(2);
+  if (arguments[0] === `create`) create();
+  if (arguments[0] === `destroy`) destroy();
+})();

@@ -1,14 +1,11 @@
 {
-  "name": "vorprog-pulumi",
+  "name": "vorprog-cloud-infrastructure",
   "main": "source/main.js",
   "scripts": {
-    "pulumi_login": "pulumi login file://.",
-    "pulumi_get_passphrase": "sops --decrypt pulumi_secrets.yaml",
-    "pulumi_up": "pulumi up"
-  },
+    "create": "node main.js create",
+    "destroy": "node main.js destroy"
+  }
   "dependencies": {
-    "@pulumi/aws": "^2.0.0-beta.3",
-    "@pulumi/pulumi": "^1.14.1",
     "lodash.map": "^4.6.0"
   }
 }
