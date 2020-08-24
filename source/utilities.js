@@ -1,32 +1,26 @@
 const childProcess = require('child_process');
 const fs = require('fs');
 const util = require('util');
-const state = require('./state');
-
-const exec = util.promisify(childProcess.exec);
-const appendToFile = util.promisify(fs.appendFile);
 
 const timestamp = `blaaaaaaaa`; // TODO
 const logFile = `./${timestamp}.log`;
 
 module.exports = {
-    execute: async (command) => {
-      console.log(command);
-      await appendToFile(logFile, command);
+  logFilename: logFile,
+  execute: (command) => {
+    console.log(command);
+    fs.appendFileSync(logFile, command);
 
-      const result = await exec(command);
-      const resultContent = result.stdout || result.stderr;
-      console.log(resultContent);
-      await appendToFile(logFile, resultContent);
+    const result = childProcess.execSync(command, `utf8`);
+    const resultContent = result.stdout || result.stderr;
+    console.log(resultContent);
+    fs.appendFileSync(logFile, resultContent);
 
-      if(result.stderr) throw new Error(result.stderr);
+    if (result.stderr) throw new Error(result.stderr);
 
-      return resultContent;
-    },
-    sleep: util.promisify(setTimeout),
-    writeFile: util.promisify(fs.writeFile),
-    readFile: util.promisify(fs.readFile),
-    deleteFile: util.promisify(fs.unlink),
-    getObjectFromJsonFile: async (path) => JSON.parse(await this.readFile(path).toString()),
-    writeObjectToFile: async (path, object) => await this.writeFile(path, JSON.stringify(object)),
+    return resultContent;
+  },
+  sleep: util.promisify(setTimeout),
+  getObjectFromJsonFile: (path) => JSON.parse(fs.readFileSync(path).toString()),
+  writeObjectToFile: (path, object) => fs.writeFileSync(path, JSON.stringify(object)),
 };
