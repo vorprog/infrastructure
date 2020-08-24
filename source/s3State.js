@@ -4,10 +4,10 @@ const state = require('./state');
 module.exports = {
   setup: async () => {
     state.awsCliVersion = await utilities.exec(`aws --version`);
-    state.region1 = process.env.AWS_DEFAULT_REGION || `us-west-2`;
-    state.region2 = process.env.AWS_REGION_2 || `us-east-1`;
-    state.organizationName = process.env.ORGANIZATION_NAME;
-    state.s3StateBucketName = `${state.organizationName}-cloud-infrastructure-state`;
+    state.region1 = process.env.AWS_DEFAULT_REGION;
+    state.region2 = process.env.AWS_SECONDARY_REGION;
+    state.orgName = process.env.ORGANIZATION_NAME;
+    state.s3StateBucketName = `${state.orgName}-cloud-infrastructure-state`;
 
     try {
       state.s3Bucket = await utilities.exec(`aws s3api create-bucket --bucket ${state.s3StateBucketName}`);
