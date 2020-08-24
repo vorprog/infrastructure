@@ -7,7 +7,8 @@ const main = async () => {
 
   const arguments = process.argv.slice(2);
   if (arguments[0] === `create`) create();
-  if (arguments[0] === `destroy`) destroy();
+  else if (arguments[0] === `destroy`) destroy();
+  else throw new Error(`Unrecognized argument ${arguments[0]}`);
 
   await s3StateBucket.update();
 };
