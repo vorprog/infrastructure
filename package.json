@@ -1,10 +1,6 @@
 {
   "name": "vorprog-cloud-infrastructure",
   "main": "source/main.js",
-  "scripts": {
-    "create": "node main.js create",
-    "destroy": "node main.js destroy"
-  }
   "dependencies": {
     "lodash.map": "^4.6.0"
   }
