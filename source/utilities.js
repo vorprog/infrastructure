@@ -8,16 +8,12 @@ module.exports = {
   logFilename: `./${timestamp}.log`,
   execute: command => {
     console.log(command);
-    fs.appendFileSync(this.logFilename, command);
+    fs.appendFileSync(`./${timestamp}.log`, command);
 
-    const result = childProcess.execSync(command, `utf8`);
-    const resultContent = result.stdout || result.stderr;
-    console.log(resultContent);
-    fs.appendFileSync(this.logFilename, resultContent);
-
-    if (result.stderr) throw new Error(result.stderr);
-
-    return resultContent;
+    const result = childProcess.execSync(command, `utf8`).toString();
+    console.log(result);
+    fs.appendFileSync(`./${timestamp}.log`, result);
+    return result;
   },
   sleep: util.promisify(setTimeout),
   getObjectFromJsonFile: (path) => JSON.parse(fs.readFileSync(path).toString()),
