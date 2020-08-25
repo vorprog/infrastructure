@@ -7,6 +7,10 @@ const timestamp = `blaaaaaaaa`; // TODO
 module.exports = {
   logFilename: `./${timestamp}.log`,
   execute: command => {
+    const trace = new Error().stack.split(`at `)[2].trim();
+    console.log(trace);
+    fs.appendFileSync(`./${timestamp}.log`, trace);
+
     console.log(command);
     fs.appendFileSync(`./${timestamp}.log`, command);
 
