@@ -10,7 +10,7 @@ module.exports = {
     state.s3StateBucketName = `${state.orgName}-cloud-infrastructure-state`;
 
     try {
-      state.s3Bucket = utilities.execute(`aws s3api create-bucket --bucket ${state.s3StateBucketName}`);
+      state.s3Bucket = utilities.execute(`aws s3api create-bucket --bucket ${state.s3StateBucketName} --region ${state.region1}`);
     } catch { 
       // Existing bucket
       utilities.execute(`aws s3 cp s3://${state.s3StateBucketName}/state.json state.json`);
