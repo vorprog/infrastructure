@@ -1,5 +1,8 @@
 {
-  "name": "vorprog-cloud-infrastructure",
+  "name": "cloud-infrastructure",
+  "description": "cloud-infrastructure",
+  "repository": "https://github.com/vorprog/cloud-infrastructure",
+  "license": "ISC",
   "main": "source/main.js",
   "dependencies": {
     "lodash.map": "^4.6.0"

@@ -24,9 +24,7 @@ RUN $HOME/aws/install
 RUN rm -rf $HOME/aws $HOME/awscliv2.zip
 RUN aws --version
 
-ADD ./source $HOME/source
-ADD ./package.json $HOME/package.json
-ADD ./package-lock.json $HOME/package-lock.json
+ADD ./package.json ./package-lock.json ./source $HOME/
 RUN npm install
 
 CMD node source/main.js $1
