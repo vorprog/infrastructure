@@ -24,9 +24,9 @@ RUN $HOME/aws/install
 RUN rm -rf $HOME/aws $HOME/awscliv2.zip
 RUN aws --version
 
-ADD ./source /root/source
-ADD ./package.json /root/package.json
+ADD ./source $HOME/source
+ADD ./package.json $HOME/package.json
+ADD ./package-lock.json $HOME/package-lock.json
 RUN npm install
 
-# TODO: is any EXPOSE actually necessary?
-EXPOSE 80
+CMD node source/main.js $1
