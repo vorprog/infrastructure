@@ -27,5 +27,3 @@ RUN aws --version
 ADD ./package.json ./package-lock.json $HOME/
 ADD ./source $HOME/source
 RUN npm install
-
-CMD node source/main.js $1
