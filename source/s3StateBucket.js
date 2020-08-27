@@ -16,6 +16,7 @@ module.exports = {
     state.region2 = process.env.AWS_SECONDARY_REGION;
     state.orgName = process.env.ORGANIZATION_NAME;
     state.s3StateBucketName = `${state.orgName}-cloud-infrastructure-state`;
+    state.accountId = utilities.execute(`aws sts get-caller-identity`).parseJson().Account;
 
     try {
       state.s3Bucket = utilities.execute(`aws s3api create-bucket --bucket ${state.s3StateBucketName} --region ${state.region1} --create-bucket-configuration LocationConstraint=${state.region1}`);
