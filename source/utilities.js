@@ -4,19 +4,20 @@ const util = require('util');
 
 const timestamp = `blaaaaaaaa`; // TODO
 
+const log = (content) => {
+  console.log(content);
+  fs.appendFileSync(`./${timestamp}.log`, content);
+}
+
 module.exports = {
   logFilename: `./${timestamp}.log`,
   execute: command => {
-    const trace = new Error().stack.split(`at `)[2].trim();
-    console.log(trace);
-    fs.appendFileSync(`./${timestamp}.log`, trace);
+    log(new Error().stack.split(`at `)[2].trim()); //trace
+    log(command);
 
-    console.log(command);
-    fs.appendFileSync(`./${timestamp}.log`, command);
-
-    const result = childProcess.execSync(command, `utf8`).toString();
-    console.log(result);
-    fs.appendFileSync(`./${timestamp}.log`, result);
+    const options = {stdio : 'pipe' };
+    const result = childProcess.execSync(command, options);
+    log(`Result: ${result.toString()}`);
     return result;
   },
   sleep: util.promisify(setTimeout),
