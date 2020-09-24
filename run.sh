@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+set -x
 
-docker build --tag cloud-infrastructure:latest .
+docker build --quiet --tag cloud-infrastructure:latest .
 
 docker run \
 --volume $(pwd)/aws-credentials.ini:/root/.aws/credentials \
