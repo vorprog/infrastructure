@@ -5,6 +5,7 @@
   "license": "ISC",
   "main": "source/main.js",
   "dependencies": {
+    "lodash.filter": "^4.6.0",
     "lodash.map": "^4.6.0"
   }
 }
