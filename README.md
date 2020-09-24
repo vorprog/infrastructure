@@ -33,5 +33,5 @@ A set of node scripts that utilize the [AWS CLI](https://aws.amazon.com/cli/) wi
 
 1. Create a more explicit alternative to terraform and AWS cloudformation
 2. Design a standard minimal infrastructure for basic kubernetes applications to serve from
-3. Put the concept of infrastructure as code (IAC) to full use by designing a way to re-create resources on a schedule
+3. Put the concept of infrastructure as code (IAC) to full use by designing a way to destroy and re-create resources on a schedule
 4. Save money by having ephemeral cloud resources
