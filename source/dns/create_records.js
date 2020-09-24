@@ -1,4 +1,4 @@
-const util = require('../../utilities/util');
+const util = require('../utilities/util');
 
 const hostedZonesData = util.exec(`aws route53 list-hosted-zones-by-name`);
 const targetZone = util.first(hostedZonesData.HostedZones, { Name: util.state.domain });

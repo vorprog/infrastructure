@@ -21,6 +21,6 @@
 
 ```./run.sh example.com destroy```
 
-```./run.sh example.com global/iam/create_groups```
+```./run.sh example.com iam/create_groups```
 
-```./run.sh example.com global/iam/destroy_groups```
+```./run.sh example.com iam/destroy_groups```
