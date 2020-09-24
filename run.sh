@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+docker build --tag cloud-infrastructure:latest .
+
 docker run \
 --volume $(pwd)/aws-credentials.ini:/root/.aws/credentials \
 --env DOMAIN_NAME=$1 \
