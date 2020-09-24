@@ -9,6 +9,8 @@ RUN apt-get install --yes build-essential apt-transport-https ca-certificates cu
 RUN git clone https://github.com/Homebrew/brew $HOME/.linuxbrew/Homebrew
 RUN mkdir $HOME/.linuxbrew/bin
 RUN ln -s $HOME/.linuxbrew/Homebrew/bin/brew $HOME/.linuxbrew/bin
+
+# Install brew packages
 RUN eval $($HOME/.linuxbrew/bin/brew shellenv) && brew install sops kubectl kops
 
 # Install nodejs as directed by https://github.com/nodesource/distributions/blob/master/README.md#debinstall
