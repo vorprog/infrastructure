@@ -1,6 +1,4 @@
 FROM registry.hub.docker.com/library/ubuntu:20.04
-ENV TERM=xterm
-ENV DEBIAN_FRONTEND=noninteractive
 ENV HOME=/root
 WORKDIR $HOME
 
