@@ -1,7 +1,5 @@
 # CLOUD INFRASTRUCTURE
 
-## What is this?
-
 A set of node scripts that utilize the [AWS CLI](https://aws.amazon.com/cli/) with other tools to help build standard cloud resources, kubernetes infrastructure, and deploy specified applications to clusters.
 
 ## Pre-requisites
@@ -17,16 +15,18 @@ A set of node scripts that utilize the [AWS CLI](https://aws.amazon.com/cli/) wi
 
 ## Commands
 
-```./run.sh <domain name> <source node script>```
+Cloud resources can be managed through the `run.sh` script. This script also builds the docker image.
 
-```./run.sh example.com test```
+Command format: ```./run.sh <domain name> <source node script>```
 
+Run AWS connectivity test script: ```./run.sh example.com test```
+
+Run all create/destroy scripts in order: 
 ```./run.sh example.com create```
-
 ```./run.sh example.com destroy```
 
+Run specific create/destroy scripts:
 ```./run.sh example.com iam/create_groups```
-
 ```./run.sh example.com iam/destroy_groups```
 
 ## Goals
