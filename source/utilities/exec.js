@@ -16,7 +16,7 @@ module.exports = command => {
     result = childProcess.execSync(command, options).toString();
     if (result) {
       console.log(result);
-      return result;
+      return JSON.parse(result);
     }
   } catch (err) {
     errorMessage = err.stderr.toString();
