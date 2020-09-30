@@ -43,8 +43,8 @@ const natGatewayA2 = exec(`aws ec2 create-nat-gateway --region ${region2} --allo
 const natGatewayB2= exec(`aws ec2 create-nat-gateway --region ${region2} --allocation-id ${elasticIpB2.AllocationId} --subnet-id ${privateSubnetB2.SubnetId}`).NatGateway;
 const natGatewayC2 = exec(`aws ec2 create-nat-gateway --region ${region2} --allocation-id ${elasticIpC2.AllocationId} --subnet-id ${privateSubnetC2.SubnetId}`).NatGateway;
 
-const internetGateway1 = exec(`aws ec2 create-internet-gateway --region ${region1} --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=main}]'`).InternetGateway;
-const internetGateway2 = exec(`aws ec2 create-internet-gateway --region ${region2} --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=main}]'`).InternetGateway;
+const internetGateway1 = exec(`aws ec2 create-internet-gateway --region ${region1}`).InternetGateway;
+const internetGateway2 = exec(`aws ec2 create-internet-gateway --region ${region2}`).InternetGateway;
 
 exec(`aws ec2 attach-internet-gateway --region ${region1} --internet-gateway-id ${internetGateway1.InternetGatewayId} --vpc-id ${vpc1.VpcId}`);
 exec(`aws ec2 attach-internet-gateway --region ${region2} --internet-gateway-id ${internetGateway2.InternetGatewayId} --vpc-id ${vpc2.VpcId}`);
