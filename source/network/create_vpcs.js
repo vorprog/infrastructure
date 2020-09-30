@@ -53,38 +53,38 @@ const publicRouteTable1 = exec(`aws ec2 create-route-table --region ${region1} -
 exec(`aws ec2 associate-route-table --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --subnet-id ${publicSubnetA1.SubnetId}`);
 exec(`aws ec2 associate-route-table --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --subnet-id ${publicSubnetB1.SubnetId}`);
 exec(`aws ec2 associate-route-table --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --subnet-id ${publicSubnetC1.SubnetId}`);
-exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 0.0.0.0/0 --internet-gateway-id ${internetGateway1.InternetGatewayId}`);
 
 const publicRouteTable2 = exec(`aws ec2 create-route-table --region ${region2} --vpc-id ${vpc2.VpcId}`).RouteTable;
 exec(`aws ec2 associate-route-table --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --subnet-id ${publicSubnetA2.SubnetId}`);
 exec(`aws ec2 associate-route-table --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --subnet-id ${publicSubnetB2.SubnetId}`);
 exec(`aws ec2 associate-route-table --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --subnet-id ${publicSubnetC2.SubnetId}`);
-exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 20.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 0.0.0.0/0 --internet-gateway-id ${internetGateway2.InternetGatewayId}`);
 
 const privateRouteTableA1 = exec(`aws ec2 create-route-table --region ${region1} --vpc-id ${vpc1.VpcId}`).RouteTable;
 exec(`aws ec2 associate-route-table --region ${region1} --route-table-id ${privateRouteTableA1.RouteTableId} --subnet-id ${privateSubnetA1.SubnetId}`);
-exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region1} --route-table-id ${privateRouteTableA1.RouteTableId} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${natGatewayA1.NatGatewayId}`);
 const privateRouteTableB1 = exec(`aws ec2 create-route-table --region ${region1} --vpc-id ${vpc1.VpcId}`).RouteTable;
 exec(`aws ec2 associate-route-table --region ${region1} --route-table-id ${privateRouteTableB1.RouteTableId} --subnet-id ${privateSubnetB1.SubnetId}`);
-exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region1} --route-table-id ${privateRouteTableB1.RouteTableId} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${natGatewayB1.NatGatewayId}`);
 const privateRouteTableC1 = exec(`aws ec2 create-route-table --region ${region1} --vpc-id ${vpc1.VpcId}`).RouteTable;
 exec(`aws ec2 associate-route-table --region ${region1} --route-table-id ${privateRouteTableC1.RouteTableId} --subnet-id ${privateSubnetC1.SubnetId}`);
-exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region1} --route-table-id ${publicRouteTable1.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region1} --route-table-id ${privateRouteTableC1.RouteTableId} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${natGatewayC1.NatGatewayId}`);
 
 const privateRouteTableA2 = exec(`aws ec2 create-route-table --region ${region2} --vpc-id ${vpc2.VpcId}`).RouteTable;
 exec(`aws ec2 associate-route-table --region ${region2} --route-table-id ${privateRouteTableA2.RouteTableId} --subnet-id ${privateSubnetA2.SubnetId}`);
-exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 20.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region2} --route-table-id ${privateRouteTableA2.RouteTableId} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${natGatewayA2.NatGatewayId}`);
 const privateRouteTableB2 = exec(`aws ec2 create-route-table --region ${region2} --vpc-id ${vpc2.VpcId}`).RouteTable;
 exec(`aws ec2 associate-route-table --region ${region2} --route-table-id ${privateRouteTableB2.RouteTableId} --subnet-id ${privateSubnetB2.SubnetId}`);
-exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 20.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region2} --route-table-id ${privateRouteTableB2.RouteTableId} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${natGatewayB2.NatGatewayId}`);
 const privateRouteTableC2 = exec(`aws ec2 create-route-table --region ${region2} --vpc-id ${vpc2.VpcId}`).RouteTable;
 exec(`aws ec2 associate-route-table --region ${region2} --route-table-id ${privateRouteTableC2.RouteTableId} --subnet-id ${privateSubnetC2.SubnetId}`);
-exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 20.0.0.0/0 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
+exec(`aws ec2 create-route --region ${region2} --route-table-id ${publicRouteTable2.RouteTableId} --destination-cidr-block 10.0.0.0/8 --transit-gateway-id ${transitGateway.TransitGatewayId}`);
 exec(`aws ec2 create-route --region ${region2} --route-table-id ${privateRouteTableC2.RouteTableId} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${natGatewayC2.NatGatewayId}`);
