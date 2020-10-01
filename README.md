@@ -35,3 +35,7 @@ Run specific create/destroy scripts:
 2. Design a standard minimal infrastructure for basic kubernetes applications to serve from
 3. Put the concept of infrastructure as code (IAC) to full use by designing a way to destroy and re-create resources on a schedule
 4. Save money by having ephemeral cloud resources
+
+## Notes
+
+- An analysis of (Global Ping Statistics)[https://wondernetwork.com/pings] found that AWS's US West 2 (Oregon) combined with US East 1 (Virginia) are essentially the best pair of regions to have low latency across the globe. They are also the most affordable. Mumbai was an affordable alternative region but actually had worse latency to much of Asia and Eastern Europe than select US regions did.
