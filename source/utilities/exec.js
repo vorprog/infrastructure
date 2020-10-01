@@ -6,7 +6,8 @@ const ignorableErrors = [
 ];
 
 module.exports = command => {
-  console.log(`\nTRACE: ${new Error().stack.split(`at `)[2].replace(`Object.<anonymous>`,``).trim()}`);
+  console.log(`\nTRACE: ${new Error().stack.split(`at `)[2].replace(`Object.<anonymous>`, ``).trim()}`);
+  command = command.replace(/\n/g, ` `); // puts command on a single line
   console.log(`$ ${command}`);
 
   const options = { stdio: 'pipe' };
@@ -14,14 +15,20 @@ module.exports = command => {
 
   try {
     result = childProcess.execSync(command, options).toString();
-    if (result) {
-      console.log(result);
-      return JSON.parse(result);
-    }
+    if (result) return parseContent(result);
   } catch (err) {
-    errorMessage = err.stderr.toString();
+    errorMessage = (err.stderr ? err.stderr : err).toString();
     each(ignorableErrors, message => {
       if (!errorMessage.includes(`An error occurred (${message})`)) throw new Error(errorMessage);
     });
   }
 };
+
+const parseContent = content => {
+  console.log(content);
+  try {
+    return JSON.parse(content);
+  } catch (err) {
+    return content;
+  }
+}
