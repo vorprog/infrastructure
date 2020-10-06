@@ -5,6 +5,7 @@
   "license": "ISC",
   "main": "source/main.js",
   "dependencies": {
+    "js-yaml": "^3.14.0",
     "lodash.filter": "^4.6.0",
     "lodash.find": "^4.6.0",
     "lodash.map": "^4.6.0"
