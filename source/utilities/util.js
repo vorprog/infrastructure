@@ -8,6 +8,7 @@ module.exports = {
   file: require('./file'),
   generateSecret: require('./generate_secret'),
   each: require('lodash.map'),
+  concatenate: (collection, delimiter) => require('lodash.map')(collection, item => item).join(delimiter),
   filter: require('lodash.filter'),
   first: (collection, predicate) => find(collection, predicate),
   findByNameTag: (collection, name) => find(collection, item => getNameTag(item) === name),
