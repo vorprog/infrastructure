@@ -18,16 +18,16 @@ exec(`kops create secret sshpublickey admin -i ~/.ssh/id_rsa.pub --name k8s-clus
 const cluster1ConfigYaml = exec(`kops create cluster
 --dry-run
 --name cluster1.${process.env.DOMAIN_NAME}
+--state=${s3BucketUrl}
 --cloud aws
 --api-ssl-certificate ${certificate.CertificateArn}
---state=${s3BucketUrl}
 --topology private
 --bastion="true"
 --vpc ${vpcs.region1.VpcId}
 --subnets ${subnets.region1.privateSubnetA, subnets.region1.privateSubnetB, subnets.region1.privateSubnetC}
 --network-cidr 10.101.0.0/16
 --networking cni
---ssh-public-key ${keys.asymmetric1.PublicKey}
+--ssh-public-key ${keys.region1.asymmetric.PublicKey}
 --ssh-access ${vpcs.region1.Cidr}
 --etcd-storage-type s3
 --zones ${region1}a,${region1}b,${region1}c
