@@ -9,6 +9,9 @@ const securityGroups = require('../network/get_security_groups');
 
 const region1 = process.env.AWS_DEFAULT_REGION;
 const region2 = process.env.AWS_SECONDARY_REGION;
+const s3BucketUrl = `s3://${process.env.DOMAIN_NAME}-kops-state`;
+
+exec(`kops create secret sshpublickey admin -i ~/.ssh/id_rsa.pub --name k8s-cluster.example.com --state ${s3BucketUrl}`);
 
 // Use kops tool (as it was intended) to generate configuration data
 // TODO: Convert kops command's yaml/text output to JS object
@@ -17,7 +20,7 @@ const cluster1ConfigYaml = exec(`kops create cluster
 --name cluster1.${process.env.DOMAIN_NAME}
 --cloud aws
 --api-ssl-certificate ${certificate.CertificateArn}
---state=s3://${process.env.DOMAIN_NAME}-kops-state-1234
+--state=${s3BucketUrl}
 --topology private
 --bastion="true"
 --vpc ${vpcs.region1.VpcId}
