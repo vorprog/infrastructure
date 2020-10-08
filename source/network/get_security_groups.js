@@ -1,8 +1,8 @@
 const exec = require('../utilities/exec');
 const util = require('../utilities/util');
 
-const securityGroups1 = exec(`aws ec2 describe-security-groups --region ${process.env.AWS_DEFAULT_REGION}`).SecurityGroups;
-const securityGroups2 = exec(`aws ec2 describe-security-groups --region ${process.env.AWS_SECONDARY_REGION}`).SecurityGroups;
+const securityGroups1 = exec(`aws ec2 describe-security-groups --region ${process.env.AWS_DEFAULT_REGION} --query 'SecurityGroups'`);
+const securityGroups2 = exec(`aws ec2 describe-security-groups --region ${process.env.AWS_SECONDARY_REGION} --query 'SecurityGroups'`);
 
 const privateNetwork1 = util.first(securityGroups1, { GroupName: `private-network`});
 const privateNetwork2 = util.first(securityGroups2, { GroupName: `private-network`});
