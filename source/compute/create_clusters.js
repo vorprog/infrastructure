@@ -1,8 +1,8 @@
 const exec = require('../utilities/exec');
 const file = require('../utilities/file');
 const util = require('../utilities/util');
-const vpc1 = require('../network/getters/vpc_region1');
-const subnets1 = require('../network/getters/subnets_region1');
+const vpcs = require('../network/get_vpcs');
+const subnets = require('../network/get_subnets');
 const keys = require('../storage/get_keys');
 const certificate = require('../domain/get_certificate');
 const securityGroups = require('../network/get_security_groups');
@@ -20,12 +20,12 @@ const cluster1ConfigYaml = exec(`kops create cluster
 --state=s3://${process.env.DOMAIN_NAME}-kops-state-1234
 --topology private
 --bastion="true"
---vpc ${vpc1.VpcId}
---subnets ${subnets1.privateSubnetA, subnets1.privateSubnetB, subnets1.privateSubnetC}
+--vpc ${vpcs.region1.VpcId}
+--subnets ${subnets.region1.privateSubnetA, subnets.region1.privateSubnetB, subnets.region1.privateSubnetC}
 --network-cidr 10.101.0.0/16
 --networking cni
 --ssh-public-key ${keys.asymmetric1.PublicKey}
---ssh-access ${vpc1.Cidr}
+--ssh-access ${vpcs.region1.Cidr}
 --etcd-storage-type s3
 --zones ${region1}a,${region1}b,${region1}c
 --node-count 3
