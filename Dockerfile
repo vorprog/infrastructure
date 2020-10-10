@@ -3,7 +3,7 @@ ENV HOME=/root
 WORKDIR $HOME
 
 RUN apt-get update --yes
-RUN apt-get install --yes build-essential apt-transport-https ca-certificates curl unzip git 
+RUN apt-get install --yes build-essential apt-transport-https ca-certificates curl unzip git
 
 # Install brew via git clone as directed by https://docs.brew.sh/Homebrew-on-Linux#alternative-installation
 RUN git clone https://github.com/Homebrew/brew $HOME/.linuxbrew/Homebrew
@@ -11,10 +11,11 @@ RUN mkdir $HOME/.linuxbrew/bin
 RUN ln -s $HOME/.linuxbrew/Homebrew/bin/brew $HOME/.linuxbrew/bin
 
 # Install brew packages
+# TODO: add eval to beginning of scripts
 RUN eval $($HOME/.linuxbrew/bin/brew shellenv) && brew install sops kubectl kops
 
 # Install nodejs as directed by https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl --silent https://deb.nodesource.com/setup_12.x | bash -
+RUN curl --silent https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
 
 # Install AWS CLI as directed by https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
