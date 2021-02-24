@@ -1,11 +1,21 @@
 require('./iam/create_users');
 require('./iam/create_groups');
 
-require('./network/create_vpcs');
-require('./network/create_subnets');
 require('./network/create_transit_gateway');
-require('./network/create_private_networks');
-require('./network/create_public_networks');
+
+process.env.AWS_DEFAULT_REGION = process.env.AWS_PRIMARY_REGION;
+require('./network/region1/create_vpc');
+require('./network/region1/create_subnets');
+require('./network/region1/create_transit_gateway_attachment');
+require('./network/region1/create_private_networks');
+require('./network/region1/create_public_networks');
+
+process.env.AWS_DEFAULT_REGION = process.env.AWS_SECONDARY_REGION;
+require('./network/region2/create_vpc');
+require('./network/region2/create_subnets');
+require('./network/region2/create_transit_gateway_attachment');
+require('./network/region2/create_private_networks');
+require('./network/region2/create_public_networks');
 
 require('./storage/create_keys');
 require('./storage/create_buckets');
