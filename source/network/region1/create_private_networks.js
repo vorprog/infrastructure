@@ -3,26 +3,40 @@ const vpc = require('./get_vpc');
 const subnets = require('./get_subnets');
 const transitGateway = require('./get_transit_gateway');
 
-const elasticIpA1 = exec(`aws ec2 allocate-address --domain vpc`);
-const elasticIpB1 = exec(`aws ec2 allocate-address --domain vpc`);
-const elasticIpC1 = exec(`aws ec2 allocate-address --domain vpc`);
+const elasticIpA = exec(`aws ec2 allocate-address
+--domain vpc
+--tag-specifications 'ResourceType=elastic-ip,Tags=[{Key=Name,Value=private_a}]'`);
 
-const natGatewayA1 = exec(`aws ec2 create-nat-gateway 
---allocation-id ${elasticIpA1.AllocationId}
---subnet-id ${subnets.privateSubnetA.SubnetId} 
+const elasticIpB = exec(`aws ec2 allocate-address
+--domain vpc
+--tag-specifications 'ResourceType=elastic-ip,Tags=[{Key=Name,Value=private_b}]'`);
+
+const elasticIpC = exec(`aws ec2 allocate-address
+--domain vpc
+--tag-specifications 'ResourceType=elastic-ip,Tags=[{Key=Name,Value=private_c}]'`);
+
+const natGatewayA = exec(`aws ec2 create-nat-gateway 
+--allocation-id ${elasticIpA.AllocationId}
+--subnet-id ${subnets.privateSubnetA.SubnetId}
+--tag-specifications 'ResourceType=natgateway,Tags=[{Key=Name,Value=private_a}]'
 --query NatGateway`);
 
-const natGatewayB1 = exec(`aws ec2 create-nat-gateway
---allocation-id ${elasticIpB1.AllocationId}
+const natGatewayB = exec(`aws ec2 create-nat-gateway
+--allocation-id ${elasticIpB.AllocationId}
 --subnet-id ${subnets.privateSubnetB.SubnetId}
+--tag-specifications 'ResourceType=natgateway,Tags=[{Key=Name,Value=private_b}]'
 --query NatGateway`);
 
-const natGatewayC1 = exec(`aws ec2 create-nat-gateway
---allocation-id ${elasticIpC1.AllocationId}
+const natGatewayC = exec(`aws ec2 create-nat-gateway
+--allocation-id ${elasticIpC.AllocationId}
 --subnet-id ${subnets.privateSubnetC.SubnetId}
+--tag-specifications 'ResourceType=natgateway,Tags=[{Key=Name,Value=private_c}]'
 --query NatGateway`);
 
-const privateRouteTableA = exec(`aws ec2 create-route-table --vpc-id ${vpc.VpcId} --query RouteTable`);
+const privateRouteTableA = exec(`aws ec2 create-route-table 
+--vpc-id ${vpc.VpcId}
+--tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=private_a}]'
+--query RouteTable`);
 
 exec(`aws ec2 associate-route-table
 --route-table-id ${privateRouteTableA.RouteTableId}
@@ -36,9 +50,12 @@ exec(`aws ec2 create-route
 exec(`aws ec2 create-route 
 --route-table-id ${privateRouteTableA.RouteTableId}
 --destination-cidr-block 0.0.0.0/0
---nat-gateway-id ${natGatewayA1.NatGatewayId}`);
+--nat-gateway-id ${natGatewayA.NatGatewayId}`);
 
-const privateRouteTableB = exec(`aws ec2 create-route-table --vpc-id ${vpc.VpcId} --query RouteTable`);
+const privateRouteTableB = exec(`aws ec2 create-route-table 
+--vpc-id ${vpc.VpcId}
+--tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=private_b}]'
+--query RouteTable`);
 
 exec(`aws ec2 associate-route-table
 --route-table-id ${privateRouteTableB.RouteTableId}
@@ -52,9 +69,12 @@ exec(`aws ec2 create-route
 exec(`aws ec2 create-route 
 --route-table-id ${privateRouteTableB.RouteTableId}
 --destination-cidr-block 0.0.0.0/0
---nat-gateway-id ${natGatewayB1.NatGatewayId}`);
+--nat-gateway-id ${natGatewayB.NatGatewayId}`);
 
-const privateRouteTableC = exec(`aws ec2 create-route-table --vpc-id ${vpc.VpcId} --query RouteTable`);
+const privateRouteTableC = exec(`aws ec2 create-route-table
+--vpc-id ${vpc.VpcId}
+--tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=private_c}]'
+--query RouteTable`);
 
 exec(`aws ec2 associate-route-table
 --route-table-id ${privateRouteTableC.RouteTableId}
@@ -68,4 +88,4 @@ exec(`aws ec2 create-route
 exec(`aws ec2 create-route 
 --route-table-id ${privateRouteTableC.RouteTableId}
 --destination-cidr-block 0.0.0.0/0
---nat-gateway-id ${natGatewayC1.NatGatewayId}`);
+--nat-gateway-id ${natGatewayC.NatGatewayId}`);
