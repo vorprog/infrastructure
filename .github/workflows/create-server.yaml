@@ -1,0 +1,30 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+name: create-server
+on:
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: Image Tag
+        required: false
+        default: latest
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-west-2
+  AWS_AMI_UBUNTU_SERVER_20_04_LTS: ami-09d9c897fc36713bf
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: amazon/aws-cli
+    steps:
+      - run: |
+          aws --version
+          aws ec2 create-key-pair --key-name infrastructure
+          aws ec2 run-instances \
+          --image-id $AWS_AMI_UBUNTU_SERVER_20_04_LTS \
+          --instance-type t2.micro \
+          --key-name infrastructure
+          --user-data userdata.sh
