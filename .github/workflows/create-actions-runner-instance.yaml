@@ -1,5 +1,5 @@
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
-name: create-server
+name: create-actions-runner-instance
 on:
   # schedule:
   #   - cron:  '30 8 * * *'
@@ -21,7 +21,7 @@ defaults:
   run:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 jobs:
-  build:
+  create-instance:
     runs-on: ubuntu-latest
     container: 
       image: amazon/aws-cli
