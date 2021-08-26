@@ -1,0 +1,35 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+name: run-infrastructure-script
+on:
+  workflow_dispatch:
+    inputs:
+      target_script:
+        description: target_script
+        required: true
+        default: test
+      aws_region:
+        description: aws_region
+        required: true
+        default: us-west-2
+env:
+  DOMAIN_NAME: vorprog.com
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  build-and-run:
+    if: contains("richardsnider", github.actor)
+    runs-on: [self-hosted, linux, ARM64]
+    steps:
+      - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
+      - run: |
+          sudo docker build $GITHUB_WORKSPACE \
+          --build-arg BUILD_COMMIT=$GITHUB_SHA \
+          --tag infrastructure:latest
+      - run: |
+          sudo docker run --tty --interactive --rm \
+          --env DOMAIN_NAME=$DOMAIN_NAME \
+          --env AWS_REGION=${{ github.event.workflow_dispatch.inputs.aws_region }} \
+          infrastructure node source/${{ github.event.workflow_dispatch.inputs.target_script }}
+      - run: |
+          sudo docker system prune --yes
