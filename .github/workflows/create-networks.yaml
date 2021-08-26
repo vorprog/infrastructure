@@ -1,0 +1,50 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+name: create-networks
+on:
+  workflow_run:
+    workflows: ["create-actions-runner-instance"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      comment:
+        description: comment
+        required: false
+        default: manual run
+env:
+  DOMAIN_NAME: vorprog.com
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  build:
+    if: contains("richardsnider", github.actor) && ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: [self-hosted, linux, ARM64]
+    steps:
+      - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
+      - name: docker build
+        run: |
+          sudo docker build $GITHUB_WORKSPACE \
+          --build-arg BUILD_COMMIT=$GITHUB_SHA \
+          --tag infrastructure:latest
+      - name: create transit gateway
+        run: |
+          sudo docker run --tty --interactive --rm \
+          --env DOMAIN_NAME=$DOMAIN_NAME \
+          infrastructure node source/network/create_transit_gateway
+      - name: create us-west-2 networks
+        run: |
+          sudo docker run --tty --interactive --rm \
+          --env DOMAIN_NAME=$DOMAIN_NAME \
+          --env AWS_REGION=us-west-2
+          infrastructure node source/network/create_networks
+      - name: create us-east-1 networks
+        run: |
+          sudo docker run --tty --interactive --rm \
+          --env DOMAIN_NAME=$DOMAIN_NAME \
+          --env AWS_REGION=us-east-1
+          infrastructure node source/network/create_networks
+          sudo docker system prune --yes
+      - name: cleanup docker
+        run: |
+          sudo docker system prune --yes
