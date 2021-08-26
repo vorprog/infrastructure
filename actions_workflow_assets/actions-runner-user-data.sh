@@ -14,8 +14,8 @@ sudo ./bin/install-dependencies.sh
 
 ##### CONFIGURE AND START SELF HOST GITHUB ACTIONS RUNNER #####
 export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
-export ACTIONS_RUNNER_TOKEN=$(aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=Value,Values=ACTIONS_RUNNER_TOKEN")
-sudo ./config.sh --url https://github.com/vorprog/infrastructure --token $ACTIONS_RUNNER_TOKEN
+export ACTIONS_RUNNER_REGISTRATION_TOKEN=$(aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=Value,Values=ACTIONS_RUNNER_REGISTRATION_TOKEN")
+sudo ./config.sh --url https://github.com/vorprog/infrastructure --token $ACTIONS_RUNNER_REGISTRATION_TOKEN
 
 sudo ./svc.sh install
 sudo ./svc.sh start

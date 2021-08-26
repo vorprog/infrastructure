@@ -21,15 +21,29 @@ defaults:
   run:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 jobs:
-  create-instance:
+  get-runner-token-from-github:
+    if: contains("richardsnider", github.actor)
     runs-on: ubuntu-latest
-    container: 
+    steps:
+      - id: github-cli
+        run: | # https://docs.github.com/en/rest/reference/actions#create-a-registration-token-for-an-organization
+          gh --version
+          export ACTIONS_RUNNER_REGISTRATION_TOKEN=$(gh api /orgs/${{ repository.owner }}/actions/runners/registration-token)
+          echo "::set-output name=ACTIONS_RUNNER_REGISTRATION_TOKEN::$ACTIONS_RUNNER_REGISTRATION_TOKEN"
+    outputs:
+      ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ steps.github-cli.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
+  create-runner-infrastructure:
+    needs: get-runner-token-from-github
+    runs-on: ubuntu-latest
+    container:
       image: amazon/aws-cli
-      volumes: # TODO: can a volume be shared
+      volumes:
         - $GITHUB_WORKSPACE:/github_workspace
     steps:
       - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
-      - run: |
+      - env:
+          ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ needs.get-runner-token-from-github.outputs.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
+        run: | # https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
           aws --version
           aws ec2 create-key-pair --key-name infrastructure-actions-runner
           aws ec2 run-instances \
@@ -40,6 +54,7 @@ jobs:
           --key-name infrastructure-actions-runner \
           --iam-instance-profile 'Name=$INSTANCE_PROFILE' \
           --user-data /github_workspace/actions_workflow_assets/actions-runner-user-data.sh \
-          --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=infrastructure-actions-runner},{Key=ACTIONS_RUNNER_TOKEN,Value=${{ secrets.ACTIONS_RUNNER_TOKEN }}}]'
-          INSTANCE_ID=$(aws ec2 wait instance-running --filters 'Name=tag:Name,Values=infrastructure-actions-runner')
+          --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=infrastructure-actions-runner},{Key=ACTIONS_RUNNER_REGISTRATION_TOKEN,Value=$ACTIONS_RUNNER_REGISTRATION_TOKEN}]'
+          aws ec2 wait instance-running --filters 'Name=tag:Name,Values=infrastructure-actions-runner'
+          export INSTANCE_ID=$(aws ec2 describe-instances --filters 'Name=tag:Name,Values=infrastructure-actions-runner' --query Reservations[0].Instances[0].InstanceId --output text)
           aws ec2 get-console-output --instance-id $INSTANCE_ID
