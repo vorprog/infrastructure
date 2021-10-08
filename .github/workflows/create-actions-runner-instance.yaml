@@ -32,19 +32,33 @@ jobs:
           echo "::set-output name=ACTIONS_RUNNER_REGISTRATION_TOKEN::$ACTIONS_RUNNER_REGISTRATION_TOKEN"
     outputs:
       ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ steps.github-cli.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
-  create-runner-infrastructure:
-    needs: get-runner-token-from-github
+  create-instance:
+    needs: 
+      - get-runner-token-from-github
     runs-on: ubuntu-latest
     container:
       image: amazon/aws-cli
       volumes:
         - $GITHUB_WORKSPACE:/github_workspace
+    env:
+      ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ needs.get-runner-token-from-github.outputs.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
     steps:
       - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
-      - env:
+      - id: create-instance-profile
+        run: |
+          aws iam create-role \
+          --role-name infrastructure-actions-runner \
+          --assume-role-policy-document file:///github_workspace/actions_workflow_assets/ec2-role-trust-policy.json
+          aws iam attach-role-policy \
+          --role-name infrastructure-actions-runner \
+          --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+          aws iam create-instance-profile --instance-profile-name infrastructure-actions-runner
+          aws iam add-role-to-instance-profile --instance-profile-name infrastructure-actions-runner --role-name infrastructure-actions-runner
+          sleep 10
+      - id: create-instance
+        env:
           ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ needs.get-runner-token-from-github.outputs.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
         run: | # https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
-          aws --version
           aws ec2 create-key-pair --key-name infrastructure-actions-runner
           aws ec2 run-instances \
           --subnet-id $EC2_SUBNET_ID \
