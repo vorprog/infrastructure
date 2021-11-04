@@ -1,13 +1,8 @@
-// the entire user data script will be generated from infrastrcture node script . . . sops files will also be in that infrastructure node script
-// there will be a unique launch template and user data for each deployment
-// ami resources are also creatd via node scripts in infrastructre repo . . . but how will old ones get cleaned up?
-
-// for methods to convert environment variable json: https://newbedev.com/exporting-json-to-environment-variables
 module.exports = (config) => `
 #!/bin/bash
 
-export SECRET_DATA=$(aws secretsmanager get-secret-value --secret-id ${config.secretName} --query '.SecretString')
-$(jq -r 'keys[] as $k | "export \\($k)=\\(.[$k])"' file.json)
+aws s3 cp ${config.sopsS3Url} ./sops
+sops exec-env sops/config.yaml
 
 sudo docker run \\
   --log-driver=fluentd \\

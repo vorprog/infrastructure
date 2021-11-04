@@ -1,5 +1,5 @@
 const userDataTemplate = require('../user-data-template');
-const userData = userDataTemplate({ secretName: `prod-config`, dockerImageTag: `1.2.5` });
+const userData = userDataTemplate({ sopsS3Url: `s3://vorprog-secrets/go-api/prod`, dockerImageTag: `1.2.5` });
 
 // https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestLaunchTemplateData.html
 module.exports = {
