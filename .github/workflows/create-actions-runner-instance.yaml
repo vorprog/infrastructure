@@ -1,74 +1,30 @@
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 name: create-actions-runner-instance
 on:
-  # schedule:
-  #   - cron:  '30 8 * * *'
   workflow_dispatch:
     inputs:
       imageTag:
         description: Image Tag
         required: false
         default: latest
-env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: us-west-2
-  EC2_SECURITY_GROUP_ID: sg-1a2b3c4d5e6f7g8h9 # TODO: figure out what this is going to be
-  EC2_SUBNET_ID: subnet-1a2b3c4d5e6f7g8h9 # TODO: figure out what this is going to be
-  INSTANCE_PROFILE: admin # TODO: figure out what this is going to be
-  UBUNTU_SERVER_20_04_AMI: ami-09d9c897fc36713bf
 defaults:
   run:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 jobs:
-  get-runner-token-from-github:
+  create-actions-runner-infrastructure:
     if: contains("richardsnider", github.actor)
     runs-on: ubuntu-latest
     steps:
       - id: github-cli
         run: | # https://docs.github.com/en/rest/reference/actions#create-a-registration-token-for-an-organization
           gh --version
-          export ACTIONS_RUNNER_REGISTRATION_TOKEN=$(gh api /orgs/${{ repository.owner }}/actions/runners/registration-token)
-          echo "::set-output name=ACTIONS_RUNNER_REGISTRATION_TOKEN::$ACTIONS_RUNNER_REGISTRATION_TOKEN"
-    outputs:
-      ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ steps.github-cli.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
-  create-instance:
-    needs: 
-      - get-runner-token-from-github
-    runs-on: ubuntu-latest
-    container:
-      image: amazon/aws-cli
-      volumes:
-        - $GITHUB_WORKSPACE:/github_workspace
-    env:
-      ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ needs.get-runner-token-from-github.outputs.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
-      - id: create-instance-profile
-        run: |
-          aws iam create-role \
-          --role-name infrastructure-actions-runner \
-          --assume-role-policy-document file:///github_workspace/actions_workflow_assets/ec2-role-trust-policy.json
-          aws iam attach-role-policy \
-          --role-name infrastructure-actions-runner \
-          --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
-          aws iam create-instance-profile --instance-profile-name infrastructure-actions-runner
-          aws iam add-role-to-instance-profile --instance-profile-name infrastructure-actions-runner --role-name infrastructure-actions-runner
-          sleep 10
-      - id: create-instance
-        env:
-          ACTIONS_RUNNER_REGISTRATION_TOKEN: ${{ needs.get-runner-token-from-github.outputs.ACTIONS_RUNNER_REGISTRATION_TOKEN }}
-        run: | # https://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
-          aws ec2 create-key-pair --key-name infrastructure-actions-runner
-          aws ec2 run-instances \
-          --subnet-id $EC2_SUBNET_ID \
-          --security-group-ids $EC2_SECURITY_GROUP_ID \
-          --image-id $UBUNTU_SERVER_20_04_AMI \
-          --instance-type t2.micro \
-          --key-name infrastructure-actions-runner \
-          --iam-instance-profile 'Name=$INSTANCE_PROFILE' \
-          --user-data /github_workspace/actions_workflow_assets/actions-runner-user-data.sh \
-          --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=infrastructure-actions-runner},{Key=ACTIONS_RUNNER_REGISTRATION_TOKEN,Value=$ACTIONS_RUNNER_REGISTRATION_TOKEN}]'
-          aws ec2 wait instance-running --filters 'Name=tag:Name,Values=infrastructure-actions-runner'
-          export INSTANCE_ID=$(aws ec2 describe-instances --filters 'Name=tag:Name,Values=infrastructure-actions-runner' --query Reservations[0].Instances[0].InstanceId --output text)
-          aws ec2 get-console-output --instance-id $INSTANCE_ID
+          export RUNNER_ORG_REGISTRATION_TOKEN=$(gh api /orgs/${{ repository.owner }}/actions/runners/registration-token)
+          docker run \
+          --env AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --env AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          --env AWS_DEFAULT_REGION=us-west-2 \
+          --env RUNNER_ORG_REGISTRATION_TOKEN=$RUNNER_ORG_REGISTRATION_TOKEN
+          --tty \
+          --interactive \
+          cloud-infrastructure \
+          node source/create-runner-infrastructure.js
