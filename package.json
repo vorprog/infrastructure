@@ -3,7 +3,6 @@
   "description": "cloud-infrastructure",
   "repository": "https://github.com/vorprog/cloud-infrastructure",
   "license": "ISC",
-  "main": "source/main.js",
   "dependencies": {
     "js-yaml": "^3.14.0",
     "lodash.filter": "^4.6.0",
