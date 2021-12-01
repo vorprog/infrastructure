@@ -1,38 +1,42 @@
 # CLOUD INFRASTRUCTURE
 
-A set of node scripts that utilize the [AWS CLI](https://aws.amazon.com/cli/) with other tools to help build standard cloud resources, kubernetes infrastructure, and deploy specified applications to clusters.
+A set of node scripts that utilize the [AWS CLI](https://aws.amazon.com/cli/) with other tools to help create/destroy cloud resources and deploy applications. Instead of storing state, scripts identify resources based on name conventions.
 
 ## Pre-requisites
+
+AKA: Things that are not really disposable/ephemeral and so less sensical to automate this way.
 
 - AWS account
 - Registered domain name
 - AWS Route53 hosted zone for the domain
 - AWS ACM validated public certificate for the domain
 - Name Server (NS) and Start of Authority (SOA) records for the domain in AWS Route53 
-- `docker` installed
+- Docker
 
-## Commands
+## Get started
 
-Cloud resources can be managed through the `run.sh` script. This script also builds the docker image.
+```docker build --tag cloud-infrastructure```
 
-Command format: ```./run.sh <domain name> <source node script>```
-
-Run AWS connectivity test script: ```./run.sh example.com test```
-
-Run all create/destroy scripts in order: 
-```./run.sh example.com create```
-```./run.sh example.com destroy```
-
-Run specific create/destroy scripts:
-```./run.sh example.com iam/create_groups```
-```./run.sh example.com iam/destroy_groups```
+```
+docker run \
+--env DOMAIN_NAME=example-route53-domain.com \
+--env AWS_SECRET_KEY_ID=????????? \
+--env AWS_SECRET_ACCESS_KEY=?????? \
+--env AWS_DEFAULT_REGION=us-west-2 \
+--env AWS_SECONDARY_REGION=us-east-1 \
+--tty \
+--interactive \
+cloud-infrastructure \
+node scripts/test.js
+```
 
 ## Goals
 
-1. Create a more explicit alternative to terraform and AWS cloudformation
-2. Design a standard minimal infrastructure for basic kubernetes applications to serve from
+1. Design highly scalable infrastructure utilizing basic (cheap) AWS resources like S3 and AutoScaling Groups.
+2. Provide a simpler method to terraform/cloudformation that doesn't rely on persistent state.
 3. Put the concept of infrastructure as code (IAC) to full use by designing a way to destroy and re-create resources on a schedule
-4. Save money by having ephemeral cloud resources
+4. Save extra money by having ephemeral cloud resources that are created/destroyed on a schedule.
+5. Provide a tool that is lightweight but easier to work with than a bunch of bash scripts.
 
 ## Notes
 
