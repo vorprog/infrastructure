@@ -1,6 +1,7 @@
+const exec = require('@vorprog/exec');
 const util = require('../utilities/util');
 
-const hostedZonesData = util.exec(`aws route53 list-hosted-zones-by-name`);
+const hostedZonesData = exec(`aws route53 list-hosted-zones-by-name`);
 const targetZone = util.first(hostedZonesData.HostedZones, { Name: process.env.DOMAIN_NAME });
 
 const recordSetData = {

@@ -1,4 +1,4 @@
-const exec = require('../utilities/exec');
+const exec = require('@vorprog/exec');
 const util = require('../utilities/util');
 
 const certificates = exec(`aws acm list-certificates --query 'CertificateSummaryList'`);
