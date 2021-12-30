@@ -8,7 +8,6 @@ module.exports = {
       AssociatePublicIpAddress: true,
       DeviceIndex: 0,
       Ipv6AddressCount: 1,
-      SubnetId: `subnet-7b16de0c`
     }
   ],
   ImageId: `ami-8c1be5f6`,
