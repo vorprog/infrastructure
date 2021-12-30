@@ -1,16 +1,5 @@
 const exec = require('@vorprog/exec');
 
-const trustPolicyContent = {
-  Version: `2012-10-17`,
-  Statement: {
-    Effect: `Allow`,
-    Principal: {
-      Service: `ec2.amazonaws.com`
-    },
-    Action: `sts:AssumeRole`
-  }
-};
-
 const policyContent = {
   Version: `2012-10-17`,
   Statement: [
@@ -43,6 +32,23 @@ const policyContent = {
   ]
 };
 
-exec(`aws iam create-policy --policy-name app-ec2-node --policy-document '${JSON.stringify(policyContent)}'`);
+exec(`aws iam create-policy --policy-name basic-app --policy-document '${JSON.stringify(policyContent)}'`);
 
-// TODO: create role and attach policies
+const assumeRolePolicyContent = {
+  Version: `2012-10-17`,
+  Statement: {
+    Effect: `Allow`,
+    Principal: {
+      Service: `ec2.amazonaws.com`
+    },
+    Action: `sts:AssumeRole`
+  }
+};
+
+exec(`aws iam create-role
+--role-name basic-app
+--assume-role-policy-document "${JSON.stringify(assumeRolePolicyContent)}"`);
+
+exec(`aws iam attach-role-policy
+--role-name basic-app
+--policy-arn basic-app`);
