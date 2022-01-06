@@ -21,3 +21,7 @@ exec(`aws iam policy
 exec(`aws iam attach-role-policy
 --role-name actions-runner
 --policy-arn arn:aws:iam::aws:policy/AdministratorAccess`);
+
+exec(`aws iam attach-role-policy
+--role-name actions-runner
+--policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore`);
