@@ -4,15 +4,6 @@
 
 export default (ghcrImageUri, githubActionsToken) => ({
   schemaVersion: `1.0`,
-  // parameters: [ // https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-user-defined-variables.html
-  //   {
-  //     GHCR_PAT: { // Personal Access Token for pulling from Github Container Registry
-  //       type: `string`,
-  //       default: `ghp_examplerandomguidcharacters1234`,
-  //       // description: `Github Personal Access Token for authenticating to ghcr.io's registry.`
-  //     }
-  //   }
-  // ],
   phases: [
     {
       name: `build`,
