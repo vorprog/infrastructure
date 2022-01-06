@@ -16,8 +16,8 @@ const awsAccountId = exec(`aws sts get-caller-identity --query Account --output 
 
 exec(`aws ec2 run-instances
 --subnet-id ${infrastructureSubnet.SubnetId}
---security-groups "private"
---image-id arn:aws:imagebuilder:us-west-2:${awsAccountId}:image/actions-runner/2.285.0/1
+--security-groups "default"
+--image-id arn:aws:imagebuilder:${process.env.AWS_DEFAULT_REGION}:${awsAccountId}:image/actions-runner/${process.env.ACTIONS_RUNNER_VERSION}/1
 --user-data file://${__dirname}/user-data
 --iam-instance-profile Name=actions-runner
 --key-name actions-runner

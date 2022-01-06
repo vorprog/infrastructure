@@ -10,6 +10,15 @@ const vpc = exec(`aws ec2 create-vpc
 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=infrastructure}]'
 --query 'Vpc'`);
 
+const defaultSecurityGroup = exec(`aws ec2 create-security-group 
+--group-name default 
+--description default
+--vpc-id ${vpc.VpcId}`);
+
+exec(`aws ec2 authorize-security-group-ingress
+--group-id ${defaultSecurityGroup.GroupId}
+--source-group ${defaultSecurityGroup.GroupId}`);
+
 const subnet = exec(`aws ec2 create-subnet
 --availability-zone ${process.env.AWS_DEFAULT_REGION}a
 --vpc-id ${vpc.VpcId}
