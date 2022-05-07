@@ -28,9 +28,9 @@ jobs:
           curl -o k3s-arm64 -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s-arm64
       - run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/
           ls
-          k3s-arm64 server
+          ./k3s-arm64 server
           sleep 30
-          k3s kubectl get node
+          ./k3s kubectl get node
           
           
 
