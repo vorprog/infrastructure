@@ -20,13 +20,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/k3s-arm64
+            k3s-arm64
           key: ${{ runner.os }}-k3s-arm64
       - if: steps.cache.outputs.cache-hit != 'true'
         run: | # curl -sfL https://github.com/k3s-io/k3s/releases/download/v1.23.6%2Bk3s1/k3s-arm64
           export LATEST_STABLE_VERSION=$(curl -w '%{url_effective}' -L -s -S https://update.k3s.io/v1-release/channels/stable -o /dev/null | sed -e 's|.*/||')
           curl -o k3s-arm64 -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s-arm64
       - run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/
+          ls
           k3s-arm64 server
           sleep 30
           k3s kubectl get node
