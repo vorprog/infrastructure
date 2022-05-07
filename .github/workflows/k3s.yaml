@@ -1,0 +1,35 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+# https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions
+# https://docs.github.com/en/actions/learn-github-actions/environment-variables
+name: publish-k3s-image
+on:
+  workflow_dispatch:
+    inputs:
+      manual-workflow-comment:
+        description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
+        required: false
+        default: Manual workflow_dispatch trigger
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - id: cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/k3s-arm64
+          key: ${{ runner.os }}-k3s-arm64
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: | # curl -sfL https://github.com/k3s-io/k3s/releases/download/v1.23.6%2Bk3s1/k3s-arm64
+          export LATEST_STABLE_VERSION=$(curl -w '%{url_effective}' -L -s -S https://update.k3s.io/v1-release/channels/stable -o /dev/null | sed -e 's|.*/||')
+          curl -o k3s-arm64 -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s-arm64
+      - run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/
+          k3s-arm64 server
+          sleep 30
+          k3s kubectl get node
+          
+          
+
