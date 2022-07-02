@@ -1,0 +1,28 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+name: create-gke-cluster
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      TERRAFORM_IMAGE:
+        description: Image Tag
+        required: false
+        default: docker.io/hashicorp/terraform:latest
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: git-checkout
+        uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
+      - name: terraform # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-docker-hub-action
+        uses: docker://${{github.event.inputs.TERRAFORM_IMAGE}}
+        with:
+          entrypoint: /bin/sh
+        run: |
+          terraform version
+          pwd
+          ls
