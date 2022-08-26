@@ -30,10 +30,9 @@ jobs:
       - if: steps.cache.outputs.cache-hit != 'true' || inputs.force-update-cache
         run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/
           export LATEST_STABLE_VERSION=$(curl -w '%{url_effective}' -L -s -S https://update.k3s.io/v1-release/channels/stable -o /dev/null | sed -e 's|.*/||')
-          curl -o k3s -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s
-          sudo chmod +x k3s
-          sudo -s source k3s --version
-          mv k3s /bin/k3s
+          sudo curl -o /bin/k3s -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s
+          sudo chmod +x /bin/k3s
+          sudo k3s --version
       - run: | # https://github.com/k3s-io/k3s/blob/master/pkg/cli/cmds/server.go https://github.com/google/cel-spec
           k3s --version
           sudo k3s server &
