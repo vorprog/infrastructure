@@ -1,14 +1,14 @@
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 # https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions
-# https://docs.github.com/en/actions/learn-github-actions/environment-variables
-name: k3s # https://github.com/k3s-io/k3s https://kubernetes.io/releases/download/
+# https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+name: k3s # https://github.com/k3s-io/k3s
 on:
   workflow_dispatch:
-    inputs:
-      comment:
+    inputs: # https://docs.github.com/en/actions/learn-github-actions/contexts#inputs-context
+      manual-workflow-trigger-comment:
         required: false
-        default: Default workflow_dispatch trigger comment
-        description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
+        default: manual workflow_dispatch triggered 
+        description: comment
       force-update-cache:
         default: false
         required: false
@@ -21,8 +21,8 @@ jobs:
   run-k3s:
     runs-on: ubuntu-latest
     steps:
-      - id: cache
-        uses: actions/cache@v3
+      - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
+      - uses: actions/cache@v3 # https://github.com/actions/cache/blob/main/action.yml
         with:
           path: |
             /bin/k3s
@@ -33,16 +33,21 @@ jobs:
           sudo curl -o /bin/k3s -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s
           sudo chmod +x /bin/k3s
           sudo k3s --version
-      - run: | # https://github.com/k3s-io/k3s/blob/master/pkg/cli/cmds/server.go https://github.com/google/cel-spec
-          k3s --version
-          sudo k3s server &
+      - env: # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
+          K3S_NODE_NAME: ${{ runner.name  }}-${{ job.container.id }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          sudo k3s --version
+          echo "Node name: $K3S_NODE_NAME"
+          cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
+          sudo k3s server --config ./kubernetes/k3s/k3s-config.yaml &
           sleep 30
-          sudo k3s kubectl get node
+          sudo k3s kubectl get node --output wide
+          sudo k3s kubectl get pods --all-namespaces --output wide
+          sudo k3s kubectl get services --all-namespaces --output wide
+          sudo k3s kubectl get ingresses --all-namespaces --output wide
+
         # sudo chmod +x k3s
         # sudo systemctl enable ${FILE_K3S_SERVICE}
         # sudo systemctl daemon-reload
         # sudo ./k3s server
         # ./k3s kubectl logs daemonset/metrics-server --namespace kube-system
-          
-          
-
