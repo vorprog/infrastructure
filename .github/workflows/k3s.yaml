@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo k3s --version
           echo "Node name: $K3S_NODE_NAME"
-          sudo k3s server --config ./kubernetes/k3s/k3s-config.yaml &
+          sudo k3s server &
           sleep 30
           sudo k3s kubectl get node --output wide
           sudo k3s kubectl get pods --all-namespaces --output wide
