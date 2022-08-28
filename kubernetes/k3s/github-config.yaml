@@ -2,8 +2,8 @@
 # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/ (https://github.com/k3s-io/k3s/blob/master/pkg/cli/cmds/server.go)
 
 # write-kubeconfig-mode: "0644"
-tls-san:
-  - "github.local"
+# tls-san:
+#   - "github.local"
 node-label:
   - "cloud=github"
 disable:
