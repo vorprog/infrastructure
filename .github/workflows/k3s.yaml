@@ -29,6 +29,7 @@ jobs:
           path: /usr/local/bin/k3s
           key: k3s
       - id: download-k3s
+        name: Download k3s
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force-update-cache
         run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/
           export LATEST_STABLE_VERSION=$(curl -w '%{url_effective}' -L -s -S https://update.k3s.io/v1-release/channels/stable -o /dev/null | sed -e 's|.*/||')
@@ -36,6 +37,7 @@ jobs:
           sudo chmod +x /usr/local/bin/k3s
           sudo k3s --version
       - id: run-k3s
+        name: Run k3s
         env: # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
           K3S_NODE_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
         timeout-minutes: 5
@@ -44,6 +46,7 @@ jobs:
           echo "Node name: $K3S_NODE_NAME"
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
           sudo cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
+          sudo cat /etc/rancher/k3s/config.yaml
           sudo k3s server > k3s.log 2>&1 &
           sleep 30
           sudo k3s kubectl get node --output wide
