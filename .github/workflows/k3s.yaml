@@ -40,7 +40,7 @@ jobs:
           echo "Node name: $K3S_NODE_NAME"
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
           sudo cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
-          sudo k3s server -v 2 --log k3s.log --alsologtostderr > k3s-shell.log &
+          sudo k3s server > k3s.log 2>&1 &
           sleep 30
           sudo k3s kubectl get node --output wide
           sudo k3s kubectl get pods --all-namespaces --output wide
