@@ -34,7 +34,7 @@ jobs:
           sudo chmod +x /bin/k3s
           sudo k3s --version
       - env: # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
-          K3S_NODE_NAME: ${{ runner.name  }}-${{ job.container.id }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          K3S_NODE_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           sudo k3s --version
           echo "Node name: $K3S_NODE_NAME"
