@@ -38,6 +38,7 @@ jobs:
         run: |
           sudo k3s --version
           echo "Node name: $K3S_NODE_NAME"
+          mkdir --parents /var/lib/rancher/k3s/server/manifests
           cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
           sudo k3s server --config ./kubernetes/k3s/k3s-config.yaml &
           sleep 30
