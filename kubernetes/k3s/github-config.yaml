@@ -4,7 +4,7 @@
 # write-kubeconfig-mode: "0644"
 # tls-san:
 #   - "github.local"
-node-label:
-  - "cloud=github"
+# node-label:
+#   - "cloud=github"
 # disable:
 #   - traefik # https://rancher.com/docs/k3s/latest/en/networking/
