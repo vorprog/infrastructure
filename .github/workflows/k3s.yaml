@@ -23,6 +23,11 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
+      - id: tailscale
+        uses: tailscale/github-action@v1 # https://github.com/tailscale/github-action/blob/main/action.yml
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          args: "--ssh" # https://tailscale.com/kb/1193/tailscale-ssh/
       - id: cache
         uses: actions/cache@v3 # https://github.com/actions/cache/blob/main/action.yml
         with:
@@ -36,6 +41,15 @@ jobs:
           sudo curl -o /usr/local/bin/k3s -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s
           sudo chmod +x /usr/local/bin/k3s
           sudo k3s --version
+      # - id: download-tailscale # https://tailscale.com/kb/1193/tailscale-ssh/
+      #   name: Download tailscale
+      #   run: | # https://tailscale.com/kb/1039/install-ubuntu-2004/
+      #     curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/focal.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+      #     curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/focal.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+      #     sudo apt-get update
+      #     sudo apt-get install tailscale
+      #     sudo tailscale up --ssh --authkey ${{ secrets.TAILSCALE_AUTH_KEY }}
+      #     sudo tailscale ip -4
       - id: run-k3s
         name: Run k3s
         env: # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
@@ -46,7 +60,7 @@ jobs:
           echo "Node name: $K3S_NODE_NAME"
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
           sudo cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
-          sudo k3s server --config $GIHUB_WORKSPACE/kubernetes/k3s/github-config.yaml > k3s.log 2>&1 &
+          sudo k3s server --node-label "cloud=github" > k3s.log 2>&1 &
           sleep 30
           sudo k3s kubectl get node --output wide
           sudo k3s kubectl get services --all-namespaces --output wide
