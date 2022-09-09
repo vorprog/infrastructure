@@ -45,19 +45,25 @@ jobs:
         name: Run k3s
         env: # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
           K3S_NODE_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
-        timeout-minutes: 5
         run: |
           sudo useradd k3s
-          (echo 'blabla'; echo 'blabla') | sudo passwd k3s
+          (echo '${{ secrets.K3S_USER_SSH_PASSWORD }}'; echo '${{ secrets.K3S_USER_SSH_PASSWORD }}') | sudo passwd k3s
           sudo usermod -a -G sudo k3s
           sudo k3s --version
           echo "Node name: $K3S_NODE_NAME"
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
           sudo cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
           sudo k3s server --node-label "cloud=github" > k3s.log 2>&1 &
-          sleep 30
-          sudo k3s kubectl get node --output wide
-          sudo k3s kubectl get services --all-namespaces --output wide
-          sudo k3s kubectl get pods --all-namespaces --output wide
-          sudo k3s kubectl get events --all-namespaces --watch
+          sudo k3s kubectl get events --all-namespaces --watch & > artifacts/events.log
+          sleep 300
+        #  sudo k3s kubectl version
+        #  sudo k3s kubectl get node --output wide
+        #  mkdir artifacts
+        #  sudo k3s kubectl get services --all-namespaces --output wide
+        #  sudo k3s kubectl get pods --all-namespaces --output wide > pods.log &
         # sudo k3s kubectl logs daemonset/metrics-server --namespace kube-system
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: artifacts
