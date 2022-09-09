@@ -56,6 +56,7 @@ jobs:
           K3S_NODE_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
         timeout-minutes: 5
         run: |
+          (echo 'somepassword'; echo 'somepassword') | sudo passwd root
           sudo k3s --version
           echo "Node name: $K3S_NODE_NAME"
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
