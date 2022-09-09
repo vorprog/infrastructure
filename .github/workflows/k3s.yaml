@@ -18,8 +18,9 @@ defaults:
   run:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 jobs:
-  run-k3s:
+  create-cluster:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - id: checkout
         uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
@@ -28,6 +29,12 @@ jobs:
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
           args: "--ssh" # https://tailscale.com/kb/1193/tailscale-ssh/
+      - id: create-k3s-user
+        name: Create k3s User
+        run: |
+          sudo useradd k3s
+          (echo '${{ secrets.K3S_USER_PASSWORD }}'; echo '${{ secrets.K3S_USER_PASSWORD }}') | sudo passwd k3s
+          sudo usermod -a -G sudo k3s
       - id: cache
         uses: actions/cache@v3 # https://github.com/actions/cache/blob/main/action.yml
         with:
@@ -40,30 +47,30 @@ jobs:
           export LATEST_STABLE_VERSION=$(curl -w '%{url_effective}' -L -s -S https://update.k3s.io/v1-release/channels/stable -o /dev/null | sed -e 's|.*/||')
           sudo curl -o /usr/local/bin/k3s -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s
           sudo chmod +x /usr/local/bin/k3s
-          sudo k3s --version
-      - id: run-k3s
-        name: Run k3s
+      - id: start-k3s
+        name: Start k3s
         env: # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
           K3S_NODE_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
+        timeout-minutes: 1
         run: |
-          sudo useradd k3s
-          (echo '${{ secrets.K3S_USER_SSH_PASSWORD }}'; echo '${{ secrets.K3S_USER_SSH_PASSWORD }}') | sudo passwd k3s
-          sudo usermod -a -G sudo k3s
           sudo k3s --version
           echo "Node name: $K3S_NODE_NAME"
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
           sudo cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
           sudo k3s server --node-label "cloud=github" > k3s.log 2>&1 &
           until (sudo k3s kubectl get nodes); do sleep 1; done
+      - id: run-k3s
+        name: Run k3s for 5 minutes
+        run:
+          mkdir artifacts
+          sudo k3s kubectl version > artifacts/version.log
+          sudo k3s kubectl get nodes --output yaml > artifacts/nodes.log
+          sudo k3s kubectl get services --all-namespaces --output wide > artifacts/services.log
+          sudo k3s kubectl get pods --all-namespaces --output wide > artifacts/pods.log 2>&1 &
+          sudo k3s kubectl logs deployment/metrics-server --namespace kube-system --follow > artifacts/metrics-server.log 2>&1 &
           sudo k3s kubectl get events --all-namespaces --watch > artifacts/events.log &
           sleep 300
-        #  sudo k3s kubectl version
-        #  sudo k3s kubectl get node --output wide
-        #  mkdir artifacts
-        #  sudo k3s kubectl get services --all-namespaces --output wide
-        #  sudo k3s kubectl get pods --all-namespaces --output wide > pods.log &
-        # sudo k3s kubectl logs daemonset/metrics-server --namespace kube-system
-      - name: Archive artifacts
+      - id: archive-artifacts
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
