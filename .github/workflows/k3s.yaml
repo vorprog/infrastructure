@@ -54,7 +54,7 @@ jobs:
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
           sudo cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
           sudo k3s server --node-label "cloud=github" > k3s.log 2>&1 &
-          until (sudo k3s kubect get nodes); do sleep 1; done
+          until (sudo k3s kubectl get nodes); do sleep 1; done
           sudo k3s kubectl get events --all-namespaces --watch > artifacts/events.log &
           sleep 300
         #  sudo k3s kubectl version
