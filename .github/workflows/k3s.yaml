@@ -62,7 +62,7 @@ jobs:
       - id: run-k3s
         name: Run k3s for 5 minutes
         run: |
-          sudo mkdir artifacts
+          mkdir artifacts
           sudo k3s kubectl version > artifacts/version.log
           sudo k3s kubectl get nodes --output yaml > artifacts/nodes.log
           sudo k3s kubectl get services --all-namespaces --output wide > artifacts/services.log
