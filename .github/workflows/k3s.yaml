@@ -38,7 +38,9 @@ jobs:
       - id: cache
         uses: actions/cache@v3 # https://github.com/actions/cache/blob/main/action.yml
         with:
-          path: /usr/local/bin
+          path: |
+            /usr/local/bin/k3s
+            /usr/local/bin/aws
           key: k3s
       - id: download-k3s
         name: Download k3s
