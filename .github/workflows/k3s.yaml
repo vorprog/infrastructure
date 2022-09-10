@@ -28,6 +28,8 @@ jobs:
         uses: tailscale/github-action@v1 # https://github.com/tailscale/github-action/blob/main/action.yml
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+      - id: tailscale-post-setup
+        name: Tailscale Post Setup
         run: |
           echo "TAILSCALE_IP=$(tailscale ip -4)" >> $GITHUB_ENV
           sudo useradd k3s
