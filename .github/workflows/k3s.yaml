@@ -38,9 +38,7 @@ jobs:
       - id: cache
         uses: actions/cache@v3 # https://github.com/actions/cache/blob/main/action.yml
         with:
-          path: |
-            /usr/local/bin/k3s
-            /usr/local/bin/aws
+          path: /usr/local/bin/k3s
           key: k3s
       - id: download-k3s
         name: Download k3s
@@ -50,14 +48,6 @@ jobs:
           sudo curl -o /usr/local/bin/k3s -sL https://github.com/k3s-io/k3s/releases/download/${LATEST_STABLE_VERSION}/k3s
           sudo chmod +x /usr/local/bin/k3s
           sudo k3s --version
-      - id: download-aws-cli
-        name: Download AWS CLI
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force-cache-update
-        run: | # https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-          sudo aws --version
       - id: set-dns
         name: Set DNS
         env:
