@@ -66,7 +66,7 @@ jobs:
         run: |
           aws route53 change-resource-record-sets \
           --hosted-zone-id ${{ secrets.AWS_HOSTED_ZONE_ID_VORPROG }} \
-          --change-batch $DNS_RECORD_SET_CHANGE_BATCH_JSON
+          --change-batch "$DNS_RECORD_SET_CHANGE_BATCH_JSON"
       - id: start-cluster
         name: Start Cluster
         env: # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
