@@ -51,6 +51,7 @@ jobs:
       - id: set-dns
         name: Set DNS
         env:
+          AWS_DEFAULT_REGION: us-west-2 # Oregon
           DNS_RECORD_SET_CHANGE_BATCH_JSON: |
             {
               "Changes": [{
@@ -65,6 +66,9 @@ jobs:
             }
         run: |
           echo $DNS_RECORD_SET_CHANGE_BATCH_JSON > /tmp/dns-record-set-change-batch.json
+          cat /tmp/dns-record-set-change-batch.json
+          aws sts get-caller-identity
+          aws route53 list-resource-record-sets --hosted-zone-id ${{ secrets.AWS_HOSTED_ZONE_ID_VORPROG }
           aws route53 change-resource-record-sets \
           --hosted-zone-id ${{ secrets.AWS_HOSTED_ZONE_ID_VORPROG }} \
           --change-batch file:///tmp/dns-record-set-change-batch.json
