@@ -7,7 +7,7 @@ on:
     inputs: # https://docs.github.com/en/actions/learn-github-actions/contexts#inputs-context
       manual-workflow-trigger-comment:
         required: false
-        default: manual workflow_dispatch triggered 
+        default: manual workflow_dispatch triggered
         description: comment
       force-cache-update:
         default: false
@@ -52,6 +52,8 @@ jobs:
         name: Set DNS
         env:
           AWS_DEFAULT_REGION: us-west-2 # Oregon
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ AWS_SECRET_ACCESS_KEY }}
           DNS_RECORD_SET_CHANGE_BATCH_JSON: |
             {
               "Changes": [{
