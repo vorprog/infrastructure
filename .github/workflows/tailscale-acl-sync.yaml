@@ -30,7 +30,7 @@ jobs:
           ACL_HUJSON: | # human json format https://tailscale.com/kb/1018/acls/
             {
               "groups": {
-                "group:ops": ${{ secrets.TAILSCALE_GROUP_OPS_MEMBER_JSON_ARRAY }},
+                "group:ops": ${{ secrets.TAILSCALE_GROUP_OPS_MEMBERS_JSON_ARRAY }},
               },
               "tagOwners": {
                 "tag:github-action-hosted-runner": ["group:ops"],
