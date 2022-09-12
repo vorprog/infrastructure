@@ -1,0 +1,86 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+# https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions
+# https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+name: tailscale-acl-sync # https://tailscale.com/kb/1204/gitops-acls/
+on:
+  workflow_dispatch:
+    inputs: # https://docs.github.com/en/actions/learn-github-actions/contexts#inputs-context
+      manual-workflow-trigger-comment:
+        required: false
+        default: manual workflow_dispatch triggered
+        description: comment
+  # push:
+  #   branches:
+  #     - ${{ github.event.repository.default_branch }}
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  acl-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - id: tailscale
+        uses: tailscale/github-action@v1 # https://github.com/tailscale/github-action/blob/main/action.yml
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+      - id: tailscale-cli-api
+        name: Tailscale CLI API
+        env:
+          ACL_JSON: > # https://tailscale.com/kb/1018/acls/
+            {
+              "groups": {
+                "group:ops": ${{ secrets.TAILSCALE_GROUP_OPS_MEMBER_JSON_ARRAY }},
+              },
+              "tagOwners": {
+                "tag:github-actions": ["group:ops"],
+              },
+              "acls": [
+                {"action": "accept", "src": ["*"], "dst": ["*:*"]},
+                {
+                  "src":    ["*"],
+                  "action": "accept",
+                  "proto":  "tcp",
+                  "dst": [
+                    "*:80", // http
+                    "*:443", // https
+                  ],
+                },
+                // {
+                // 	"src":    ["group:ops"],
+                // 	"action": "accept",
+                // 	"proto":  "udp",
+                // 	"dst": [
+                // 		"*:33434:33464", // traceroute
+                // 	],
+                // },
+                {
+                  "src":    ["group:ops"],
+                  "action": "accept",
+                  "proto":  "tcp",
+                  "dst": [
+                    "tag:github-actions:22", // ssh
+                    "tag:github-actions:6443", // kubernetes api server (kubectl), see https://kubernetes.io/docs/reference/ports-and-protocols/
+                  ],
+                },
+              ],
+              "ssh": [
+                { // Allow all users to SSH into their own devices in check mode.
+                  "action": "check",
+                  "src":    ["autogroup:members"],
+                  "dst":    ["autogroup:self"],
+                  "users":  ["autogroup:nonroot", "root"],
+                },
+                {
+                  "action": "accept",
+                  "src":    ["group:ops"],
+                  "dst":    ["tag:github-actions"],
+                  "users":  ["autogroup:nonroot", "root"],
+                },
+              ],
+            }
+        run: | # https://github.com/tailscale/tailscale/blob/main/api.md#tailnet-acl-post
+          curl 'https://api.tailscale.com/api/v2/tailnet/example.com/acl' \
+            -u "tskey-yourapikey123:" \
+            -H "If-Match: \"e0b2816b418b3f266309d94426ac7668ab3c1fa87798785bf82f1085cc2f6d9c\""
+            --data-binary "$ACL_JSON"
