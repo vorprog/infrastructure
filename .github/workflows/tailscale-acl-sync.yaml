@@ -76,4 +76,4 @@ jobs:
         run: | # https://github.com/tailscale/tailscale/blob/main/api.md#tailnet-acl-post
           curl 'https://api.tailscale.com/api/v2/tailnet/vorprog.org.github/acl' \
             --user "${{ secrets.TAILSCALE_API_KEY }}:" \
-            --data-binary '$ACL_HUJSON'
+            --data-binary "$ACL_HUJSON"
