@@ -1,0 +1,17 @@
+# https://rancher.com/docs/k3s/latest/en/helm/#automatically-deploying-manifests-and-helm-charts
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: crossplane
+---
+# https://artifacthub.io/packages/helm/crossplane/crossplane
+apiVersion: helm.cattle.io/v1 # https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig
+kind: HelmChart
+metadata:
+  name: crossplane
+  namespace: kube-system
+spec:
+  chart: crossplane
+  repo: https://charts.crossplane.io/master/
+  targetNamespace: crossplane
+  version: 1.10.0-rc.0.131.gd815faa2

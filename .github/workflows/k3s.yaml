@@ -73,8 +73,22 @@ jobs:
       - id: start-cluster
         name: Start Cluster
         timeout-minutes: 1
+        env:
+          CROSSPLANE_AWS_SECRET_RESOURCE: | # https://kubernetes.io/docs/concepts/configuration/secret/
+            kind: Secret
+            apiVersion: v1
+            stringData:
+              AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+              AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            metadata:
+              name: AWS_CREDENTIALS
+              namespace: crossplane
+            type: Opaque
         run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
           sudo k3s --version
+          sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
+          sudo echo $CROSSPLANE_AWS_SECRET_RESOURCE > /var/lib/rancher/k3s/server/manifests/aws-credentials.yaml
+          sudo cp ./kubernetes/k3s/crossplane-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
           sudo k3s server --node-name ${{ github.run_id }}-${{ github.run_attempt }} \
           --node-label "cloud=github" > k3s.log 2>&1 &
           until (sudo k3s kubectl get nodes); do sleep 1; done
