@@ -75,8 +75,6 @@ jobs:
         timeout-minutes: 1
         run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
           sudo k3s --version
-          sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
-          sudo cp ./kubernetes/k3s/ingress-nginx-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
           sudo k3s server --node-name ${{ github.run_id }}-${{ github.run_attempt }} \
           --node-label "cloud=github" > k3s.log 2>&1 &
           until (sudo k3s kubectl get nodes); do sleep 1; done
