@@ -87,7 +87,7 @@ jobs:
         run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
           sudo k3s --version
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
-          sudo echo $CROSSPLANE_AWS_SECRET_RESOURCE > /var/lib/rancher/k3s/server/manifests/aws-credentials.yaml
+          sudo echo $CROSSPLANE_AWS_SECRET_RESOURCE | sudo tee /var/lib/rancher/k3s/server/manifests/aws-credentials.yaml > /dev/null
           sudo cp ./kubernetes/k3s/crossplane-helm-chart.yaml /var/lib/rancher/k3s/server/manifests
           sudo k3s server --node-name ${{ github.run_id }}-${{ github.run_attempt }} \
           --node-label "cloud=github" > k3s.log 2>&1 &
