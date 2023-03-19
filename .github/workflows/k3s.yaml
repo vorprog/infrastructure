@@ -25,6 +25,7 @@ jobs:
       AWS_DEFAULT_REGION: us-west-2 # Oregon
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_S3_FOLDER: s3://infrastructure.${{ env.AWS_DOMAIN_NAME }}/k3s
     steps:
       - id: checkout
         uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
@@ -79,9 +80,8 @@ jobs:
           aws route53 change-resource-record-sets \
           --hosted-zone-id ${{ secrets.AWS_HOSTED_ZONE_ID_VORPROG }} \
           --change-batch "$DNS_RECORD_SET_CHANGE_BATCH_JSON"
-      - id: start-cluster
-        name: Start Cluster
-        timeout-minutes: 1
+      - id: setup-manifests
+        name: Setup Manifests
         env:
           AWS_CREDENTIALS_SECRET_RESOURCE: | # https://kubernetes.io/docs/concepts/configuration/secret/
             kind: Secret
@@ -93,12 +93,26 @@ jobs:
               name: AWS_CREDENTIALS
               namespace: kube-system
             type: Opaque
-        run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
-          sudo k3s --version
+        run: |
           sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
           sudo echo $AWS_CREDENTIALS_SECRET_RESOURCE | sudo tee /var/lib/rancher/k3s/server/manifests/aws-credentials.yaml > /dev/null
           sudo curl -o /var/lib/rancher/k3s/server/manifests/00-cert-manager-crd.yaml https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.crds.yaml
           sudo cp ./kubernetes/k3s/*.yaml /var/lib/rancher/k3s/server/manifests
+      - id: load-backup-files
+        name: Load Backup Files
+        run: |
+          sudo s3 ls $AWS_S3_FOLDER
+          if sudo aws s3api get-object $AWS_S3_FOLDER/backup.tar backup.tar; then continue; else exit; fi
+          sudo mkdir --parents /var/lib/rancher/k3s/server/manifests
+          sudo aws s3 cp $AWS_S3_FOLDER/backup.tar backup.tar
+          sudo tar -xf backup.tar -C /var/lib/rancher/k3s/server/
+          sudo litestream restore -if-replica-exists /var/lib/rancher/k3s/server/db/state.db
+      - id: start-cluster
+        name: Start Cluster
+        timeout-minutes: 1
+
+        run: | # https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/
+          sudo k3s --version
           mkdir artifacts
           sudo k3s server --node-name ${{ github.run_id }}-${{ github.run_attempt }} \
           --node-label "cloud=github" \
@@ -107,14 +121,18 @@ jobs:
       - id: monitor-cluster
         name: Monitor cluster for 5 minutes
         run: |
-          sudo litestream replicate /var/lib/rancher/k3s/server/db/state.db s3://infrastructure.${{ env.AWS_DOMAIN_NAME }}/k3s/state.db &
+          sudo litestream replicate /var/lib/rancher/k3s/server/db/state.db $AWS_S3_FOLDER/state.db &
           sudo k3s kubectl version --output yaml > artifacts/version.log
           sudo k3s kubectl get nodes --output yaml > artifacts/nodes.log
           sudo k3s kubectl get services --all-namespaces --output wide --watch > artifacts/services.log &
           sudo k3s kubectl get pods --all-namespaces --output wide --watch > artifacts/pods.log 2>&1 &
+          sudo k3s kubectl top pods --all-namespaces --output wide --watch > artifacts/top.log 2>&1 &
           sudo k3s kubectl logs deployment/metrics-server --namespace kube-system --follow > artifacts/metrics-server.log 2>&1 &
           sudo k3s kubectl get events --all-namespaces --watch > artifacts/events.log &
           sleep 300
+          sudo k3s kubectl delete node --all
+          sudo tar -cvf /var/lib/rancher/k3s/server/ --exclude *.sock --exclude db cluster-backup.tar
+          sudo aws s3 cp cluster-backup.tar $AWS_S3_FOLDER/backup.tar
       - id: archive-artifacts
         uses: actions/upload-artifact@v3
         with:
