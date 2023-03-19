@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+    - secretName: ???????????????????????
+      hosts:
+        - ????????????????
+  rules:
+    - host: vorprog.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: metrics-server.kube-system
+                port:
+                  number: 443
