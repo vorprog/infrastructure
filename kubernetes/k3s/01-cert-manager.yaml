@@ -1,0 +1,35 @@
+# https://rancher.com/docs/k3s/latest/en/helm/#automatically-deploying-manifests-and-helm-charts
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+---
+# https://artifacthub.io/packages/helm/cert-manager/cert-manager
+apiVersion: helm.cattle.io/v1 # https://rancher.com/docs/k3s/latest/en/helm/#customizing-packaged-components-with-helmchartconfig
+kind: HelmChart
+metadata:
+  name: cert-manager
+  namespace: kube-system
+spec:
+  chart: jetstack/cert-manager
+  repo: https://charts.jetstack.io
+  targetNamespace: cert-manager
+  version: 1.9.1
+  # valuesContent: |-
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    email: vorprog@vorprog.com
+    privateKeySecretRef:
+      name: prod-issuer-account-key
+    server: https://acme-v02.api.letsencrypt.org/directory
+    http01: {}
+    solvers:
+      - http01:
+          ingress:
+            class: traefik
+        selector: {}
