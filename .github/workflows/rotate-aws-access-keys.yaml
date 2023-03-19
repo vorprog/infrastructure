@@ -1,0 +1,33 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+# https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions
+# https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+name: rotate-access-keys
+on:
+  workflow_dispatch:
+    inputs: # https://docs.github.com/en/actions/learn-github-actions/contexts#inputs-context
+      manual-workflow-trigger-comment:
+        required: false
+        default: manual workflow_dispatch triggered
+        description: comment
+  # schedule:
+    # - cron: 0 0 * * 0 # midnight every saturday
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  rotate-access-keys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - id: create-new-access-key
+        name: AWS CLI command
+        env:
+          AWS_DEFAULT_REGION: us-west-2 # Oregon
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: | # https://cli.github.com/manual/gh_secret_set
+          aws iam create-access-key > new-access-key.json
+          jq ".AccessKey.AccessKeyId" new-access-key.json | gh secret set AWS_ACCESS_KEY_ID
+          jq ".AccessKey.SecretAccessKey" new-access-key.json | gh secrets set AWS_SECRET_ACCESS_KEY
+          rm new-access-key.json
+          aws iam delete-access-key $AWS_ACCESS_KEY_ID
