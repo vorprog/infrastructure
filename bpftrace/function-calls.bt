@@ -1,0 +1,4 @@
+
+uprobe:/bin/app/*:*server.handler {
+  printf("%s\n", ustack(perf))
+}
