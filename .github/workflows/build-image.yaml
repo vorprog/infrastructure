@@ -1,0 +1,91 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+name: build-image
+on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
+  repository_dispatch:
+    types: [build-image]
+  workflow_dispatch:
+    inputs:  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
+      manual-workflow-comment:
+        description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
+        required: false
+        default: Manual workflow_dispatch trigger
+env:
+  SEMANTIC_VERSION: 0.0.${{ github.run_number }}
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-west-2
+      APP_REPO: ${{ github.event.client_payload.app_repo }}
+    steps:
+      - name: Load GITHUB_ENV
+        uses: actions/download-artifact@v3
+        with:
+          name: GITHUB_ENV
+      - name: Get latest app version
+        run: |
+          gh api repos/${{ env.APP_REPO }}/releases/latest --jq '.tag_name' | tr -d '"' > output.json
+          echo "APP_VERSION_OUTPUT=$(cat output.json)" >> $GITHUB_ENV
+      - name: Create component
+        env:
+          AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
+            name: get-app
+            version: ${{ env.SEMANTIC_VERSION }}
+            platform: Linux
+            data:
+              schemaVersion: 1.0  
+              phases:
+                - name: build
+                  steps:
+                    - name: Install Packages
+                      action: ExecuteBash
+                      inputs:
+                        commands:
+                          - wget https://github.com/${{ env.APP_REPO }}/releases/download/v${{ env.APP_VERSION_OUTPUT}}/${{ env.APP_VERSION_OUTPUT}}-linux-amd64 -O /app/app
+        run: |
+          aws imagebuilder create-component \
+          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML) > output.json
+          echo "COMPONENT_OUTPUT=$(cat output.json)" >> $GITHUB_ENV
+      - name: Get base image
+        env:
+          AMI_OWNER_ID: 099720109477 # CANONICAL
+          IMAGE_NAME_PREFIX: ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server
+        run: | # https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
+          aws ec2 describe-images \
+          --filters "Name=name,Values=${{ env.IMAGE_NAME_PREFIX }}-*" "Name=owner-id,Values=${{ env.AMI_OWNER_ID }}" \
+          --query 'sort_by(Images, &CreationDate)[-1]' > output.json
+          echo "BASE_IMAGE_OUTPUT=$(cat output.json)" >> $GITHUB_ENV
+      - name: Create recipe
+        env:
+          AWS_IMAGEBUILD_CREATE_RECIPE_INPUT_YAML: |
+            name: StandardAppRecipe
+            semanticVersion: ${{ env.SEMANTIC_VERSION }}
+            parentImage: ${{ fromJson(env.BASE_IMAGE_OUTPUT).ImageId }}
+            components:
+              - componentArn: ${{ fromJson(env.COMPONENT_OUTPUT).componentBuildVersionArn }}
+        run:
+          aws imagebuilder create-recipe \
+          --cli-input-yaml file://<(echo $AWS_IMAGEBUILD_CREATE_RECIPE_INPUT_YAML) > output.json
+          echo "RECIPE_OUTPUT=$(cat output.json)" >> $GITHUB_ENV
+      - name: Create image
+        env:
+          AWS_IMAGEBUILDER_CREATE_IMAGE_INPUT_YAML: |
+            name: StandardAppImage
+            semanticVersion: ${{ env.SEMANTIC_VERSION }}
+            recipeArn: ${{ fromJson(env.RECIPE_OUTPUT).recipeArn }}
+            distributionConfigurationArn: arn:aws:imagebuilder:us-west-2:123456789012:distribution-configuration/StandardAppDistributionConfiguration
+            infrastructureConfigurationArn: arn:aws:imagebuilder:us-west-2:123456789012:infrastructure-configuration/StandardAppInfrastructureConfiguration
+        run: |
+          aws imagebuilder create-image \
+          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_IMAGE_INPUT_YAML) > output.json
+          echo "IMAGE_OUTPUT=$(cat output.json)" >> $GITHUB_ENV
+      - name: Save GITHUB_ENV
+        uses: actions/upload-artifact@v3
+        with:
+          name: GITHUB_ENV
+          path: $GITHUB_ENV
