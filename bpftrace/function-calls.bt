@@ -1,4 +1,13 @@
-
-uprobe:/bin/app/*:*server.handler {
-  printf("%s\n", ustack(perf))
+BEGIN
+{
+	printf("BEGIN ...\n");
 }
+
+interval:s:1
+{
+  printf("nanoseconds: %d", nsecs);
+}
+
+// uprobe:/bin/app/*:*server.handler {
+//  printf("%s\n", ustack(perf))
+// }
