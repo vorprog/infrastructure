@@ -1,5 +1,3 @@
-# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
-name: create-component
 on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
   repository_dispatch:
     types: [create-component]
@@ -11,6 +9,7 @@ on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook
         default: Manual workflow_dispatch trigger
 env:
   SEMANTIC_VERSION: 0.0.${{ github.run_number }}
+  EOF: __EOF__EOF__
 defaults:
   run:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
@@ -21,17 +20,18 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-west-2
-      LITESTREAM_VERSION_OUTPUT: ''
     steps:
       - name: Load GITHUB_ENV
         uses: actions/download-artifact@v3
+        continue-on-error: true
         with:
-          name: GITHUB_ENV
+          name: ${{ github.workflow }}.env
+          path: GITHUB_ENV
       - name: Get latest litestream version
         run: |
-          gh api repos/benbjohnson/litestream/releases/latest --jq '.tag_name' | tr -d '"' > output.json
-          echo "LITESTREAM_VERSION_OUTPUT=$(cat output.json)" >> $GITHUB_ENV
-          if [[ ${{ env.LITESTREAM_VERSION_OUTPUT }} == '' ]]; then exit 1; fi
+          echo "LITESTREAM_VERSION_OUTPUT<<$EOF" >> $GITHUB_ENV
+          gh api repos/benbjohnson/litestream/releases/latest --jq '.tag_name' | tr -d '"' >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
       - name: Create component
         env:
           AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
@@ -47,8 +47,8 @@ jobs:
                       action: ExecuteBash
                       inputs:
                         commands:
-                          - wget https://github.com/benbjohnson/litestream/releases/download/v${{ env.LITESTREAM_VERSION_OUTPUT}}/litestream-${{ env.LITESTREAM_VERSION_OUTPUT}}-linux-amd64.deb
-                          - sudo dpkg --install litestream-${{ env.LITESTREAM_VERSION_OUTPUT}}-linux-amd64.deb
+                          - wget https://github.com/benbjohnson/litestream/releases/download/v${{ env.LITESTREAM_VERSION_OUTPUT}}/litestream-${{ env.LITESTREAM_VERSION_OUTPUT}}-linux-arm64.deb
+                          - sudo dpkg --install litestream-${{ env.LITESTREAM_VERSION_OUTPUT}}-linux-arm64.deb
                           - sudo apt-get install bpftrace
                     - name: Create litestream config file
                       action: CreateFile
@@ -117,11 +117,12 @@ jobs:
                       inputs:
                         delaySeconds: 60
         run: |
+          echo "COMPONENT_OUTPUT<<$EOF" >> $GITHUB_ENV
           aws imagebuilder create-component \
-          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML) > output.json
-          echo "COMPONENT_OUTPUT=$(cat output.json)" >> $GITHUB_ENV
+          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML) >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
       - name: Save GITHUB_ENV
         uses: actions/upload-artifact@v3
         with:
-          name: GITHUB_ENV
-          path: $GITHUB_ENV
+          name: ${{ github.workflow }}.env
+          path: GITHUB_ENV
