@@ -7,20 +7,19 @@ on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook
         description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
         required: false
         default: Manual workflow_dispatch trigger
-env:
-  SEMANTIC_VERSION: 0.0.${{ github.run_number }}
-  EOF: __EOF__EOF__
-defaults:
-  run:
-    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+defaults: { run: { shell: "bash -ex {0}" } } # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      EOF: _EOF_${{ github.run_id }}_${{ github.run_number }}_
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-west-2
       APP_REPO: ${{ github.event.client_payload.app_repo }}
+      SEMANTIC_VERSION: 0.0.${{ github.run_number }}
+      BASE_AMI_OWNER_ID: 099720109477 # CANONICAL
+      BASE_AMI_NAME_PREFIX: ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server
     steps:
       - name: Load GITHUB_ENV
         uses: actions/download-artifact@v3
@@ -28,40 +27,21 @@ jobs:
         with:
           name: ${{ github.workflow }}.env
           path: GITHUB_ENV
+      - name: Get latest litestream version
+        run: |
+          echo "LITESTREAM_VERSION_OUTPUT<<$EOF" >> $GITHUB_ENV
+          gh api repos/benbjohnson/litestream/releases/latest --jq '.tag_name' | tr -d '"' >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
       - name: Get latest app version
         run: |
           echo "APP_VERSION_OUTPUT<<$EOF" >> $GITHUB_ENV
           gh api repos/${{ env.APP_REPO }}/releases/latest --jq '.tag_name' | tr -d '"' >> $GITHUB_ENV
           echo "$EOF" >> $GITHUB_ENV
-      - name: Create component
-        env:
-          AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
-            name: get-app
-            version: ${{ env.SEMANTIC_VERSION }}
-            platform: Linux
-            data:
-              schemaVersion: 1.0
-              phases:
-                - name: build
-                  steps:
-                    - name: Install Packages
-                      action: ExecuteBash
-                      inputs:
-                        commands:
-                          - wget https://github.com/${{ env.APP_REPO }}/releases/download/v${{ env.APP_VERSION_OUTPUT}}/${{ env.APP_VERSION_OUTPUT}}-linux-arm64 -O /app/app
-        run: |
-          echo "COMPONENT_OUTPUT<<$EOF" >> $GITHUB_ENV
-          aws imagebuilder create-component \
-          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML) >> $GITHUB_ENV
-          echo "$EOF" >> $GITHUB_ENV
       - name: Get base image
-        env:
-          AMI_OWNER_ID: 099720109477 # CANONICAL
-          IMAGE_NAME_PREFIX: ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server
         run: | # https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
           echo "BASE_IMAGE_OUTPUT<<$EOF" >> $GITHUB_ENV
           aws ec2 describe-images \
-          --filters "Name=name,Values=${{ env.IMAGE_NAME_PREFIX }}-*" "Name=owner-id,Values=${{ env.AMI_OWNER_ID }}" \
+          --filters "Name=name,Values=${{ env.BASE_AMI_NAME_PREFIX }}-*" "Name=owner-id,Values=${{ env.BASE_AMI_OWNER_ID }}" \
           --query 'sort_by(Images, &CreationDate)[-1]' >> $GITHUB_ENV
           echo "$EOF" >> $GITHUB_ENV
       - name: Create recipe
@@ -72,6 +52,15 @@ jobs:
             parentImage: ${{ fromJson(env.BASE_IMAGE_OUTPUT).ImageId }}
             components:
               - componentArn: ${{ fromJson(env.COMPONENT_OUTPUT).componentBuildVersionArn }}
+                parameters:
+                  - name: param_app_name
+                    value: ${{ env.APP_REPO }}
+                  - name: param_app_version
+                    value: ${{ env.SEMANTIC_VERSION }}
+                  - name: param_litestream_version
+                    value: ${{ env.LITESTREAM_VERSION_OUTPUT }}
+                  - name: param_aws_region
+                    value: ${{ env.AWS_DEFAULT_REGION }}
         run:
           echo "RECIPE_OUTPUT<<$EOF" >> $GITHUB_ENV
           aws imagebuilder create-recipe \
@@ -83,7 +72,6 @@ jobs:
             name: StandardAppImage
             semanticVersion: ${{ env.SEMANTIC_VERSION }}
             recipeArn: ${{ fromJson(env.RECIPE_OUTPUT).recipeArn }}
-            distributionConfigurationArn: arn:aws:imagebuilder:us-west-2:123456789012:distribution-configuration/StandardAppDistributionConfiguration
             infrastructureConfigurationArn: arn:aws:imagebuilder:us-west-2:123456789012:infrastructure-configuration/StandardAppInfrastructureConfiguration
         run: |
           echo "IMAGE_OUTPUT<<$EOF" >> $GITHUB_ENV

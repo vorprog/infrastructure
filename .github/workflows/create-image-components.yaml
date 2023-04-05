@@ -1,25 +1,27 @@
 on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
   repository_dispatch:
     types: [create-component]
+  workflow_call:
+    inputs:
+      workflow_id:
+        type: string
+        default: create-component
   workflow_dispatch:
     inputs:  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
       manual-workflow-comment:
         description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
         required: false
         default: Manual workflow_dispatch trigger
-env:
-  SEMANTIC_VERSION: 0.0.${{ github.run_number }}
-  EOF: __EOF__EOF__
-defaults:
-  run:
-    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+defaults: { run: { shell: "bash -ex {0}" } } # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      EOF: _EOF_${{ github.run_number }}_
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-west-2
+      SEMANTIC_VERSION: 0.0.${{ github.run_number }}
     steps:
       - name: Load GITHUB_ENV
         uses: actions/download-artifact@v3
@@ -27,11 +29,7 @@ jobs:
         with:
           name: ${{ github.workflow }}.env
           path: GITHUB_ENV
-      - name: Get latest litestream version
-        run: |
-          echo "LITESTREAM_VERSION_OUTPUT<<$EOF" >> $GITHUB_ENV
-          gh api repos/benbjohnson/litestream/releases/latest --jq '.tag_name' | tr -d '"' >> $GITHUB_ENV
-          echo "$EOF" >> $GITHUB_ENV
+
       - name: Create component
         env:
           AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
@@ -39,16 +37,26 @@ jobs:
             version: ${{ env.SEMANTIC_VERSION }}
             platform: Linux
             data:
-              schemaVersion: 1.0  
+              schemaVersion: 1.0
+              parameters:
+                - param_app_name:
+                    type: string
+                - param_app_version:
+                    type: string
+                - param_litestream_version:
+                    type: string
+                - param_aws_region:
+                    type: string
               phases:
                 - name: build
                   steps:
-                    - name: Install Packages
+                    - name: Install packages
                       action: ExecuteBash
                       inputs:
                         commands:
-                          - wget https://github.com/benbjohnson/litestream/releases/download/v${{ env.LITESTREAM_VERSION_OUTPUT}}/litestream-${{ env.LITESTREAM_VERSION_OUTPUT}}-linux-arm64.deb
-                          - sudo dpkg --install litestream-${{ env.LITESTREAM_VERSION_OUTPUT}}-linux-arm64.deb
+                          - wget https://github.com/benbjohnson/litestream/releases/download/v{{ param_litestream_version}}/litestream-{{ param_litestream_version}}-linux-arm64.deb
+                          - sudo dpkg --install litestream-{{ param_litestream_version}}-linux-arm64.deb
+                          - wget https://github.com/${{ github.repository_owner }}/{{ param_app_name }}/releases/download/v{{ param_app_version }}/{{ param_app_version }}-linux-arm64 -O /app/app
                           - sudo apt-get install bpftrace
                     - name: Create litestream config file
                       action: CreateFile
@@ -56,19 +64,19 @@ jobs:
                         - path: /etc/litestream.yml
                           content: | # https://litestream.io/reference/config/
                             s3:
-                              bucket: ${{ env.S3_BUCKET_NAME }}
-                              region: ${{ env.AWS_DEFAULT_REGION }}
+                              bucket: ${{ github.repository_owner }}-{{ param_app_name }}-data
+                              region: {{ param_aws_region }}
                             streams:
-                              - name: ${{ env.LITESTREAM_STREAM_NAME}}
+                              - name: ${{ github.repository_owner }}-{{ param_app_name }}
                                 path: /app/data.db
-                                url: ${{ env.S3_BUCKET_NAME }}/${{ env.S3_PATH }}
+                                url: s3://${{ github.repository_owner }}-{{ param_app_name }}-data
                     - name: Create bpftrace service unit file
                       action: CreateFile
                       inputs:
                         - path: /etc/systemd/system/bpftrace.service
                           content: |
                             [Unit]
-                            Description=BPFTrace
+                            Name=bpftrace
                             After=network.target
                             [Service]
                             Type=simple
@@ -82,36 +90,29 @@ jobs:
                         - path: /etc/systemd/system/aws-s3-sync.service
                           content: |
                             [Unit]
-                            Description=AWS S3 Sync
+                            Name=s3-sync-logs
                             After=network.target
                             [Service]
                             Type=simple
-                            ExecStart=aws s3 sync --exclude "*" --include "*.s3.log" /var/log/ s3://${{ env.S3_BUCKET_NAME }}/${{ env.S3_PATH }}/logs/
+                            ExecStart=aws s3 sync --exclude "*" --include "*.s3.log" /var/log/ s3://${{ github.repository_owner }}-{{ param_app_name }}-logs/"%H"
                             Restart=on-failure
                             [Install]
                             WantedBy=multi-user.target
-                    - name: Create main go app service unit file
+                    - name: Create main app service unit file
                       action: CreateFile
                       inputs:
                         - path: /etc/systemd/system/app.service
                           content: |
                             [Unit]
-                            Description=App
+                            Name=app
                             After=network.target
                             [Service]
                             Type=simple
+                            EnvironmentFile=/app/.env
                             ExecStart=/app/app
                             Restart=on-failure
                             [Install]
                             WantedBy=multi-user.target
-                    - name: Enable systemd services
-                      action: ExecuteBash
-                      inputs:
-                        commands:
-                          - systemctl enable bpftrace
-                          - systemctl enable s3-sync-logs
-                          - systemctl enable litestream
-                          - systemctl enable app
                     - name: Reboot
                       action: Reboot
                       inputs:
