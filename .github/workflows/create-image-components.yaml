@@ -49,7 +49,7 @@ jobs:
               phases:
                 - name: build
                   steps:
-                    - name: Install packages
+                    - name: install-packages
                       action: ExecuteBash
                       inputs:
                         commands:
