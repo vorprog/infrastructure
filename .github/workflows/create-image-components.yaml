@@ -35,7 +35,7 @@ jobs:
             name: systemd-service
             version: ${{ env.SEMANTIC_VERSION }}
             platform: Linux
-            data: |
+            data:
               schemaVersion: 1.0
               parameters:
                 - param_app_name:
@@ -117,8 +117,11 @@ jobs:
 #                      inputs:
 #                        delaySeconds: 60
         run: |
+          echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML > input.yaml
+          cat input.yaml
           aws imagebuilder create-component \
-          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML)
+          --cli-input-yaml file://input.yaml
+#          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML)
       - name: Save GITHUB_ENV
         uses: actions/upload-artifact@v3
         with:
