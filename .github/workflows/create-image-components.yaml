@@ -33,7 +33,7 @@ jobs:
         env:
           AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
             name: systemd-service
-            version: ${{ env.SEMANTIC_VERSION }}
+            semanticVersion: ${{ env.SEMANTIC_VERSION }}
             platform: Linux
             data:
               schemaVersion: 1.0
@@ -117,11 +117,8 @@ jobs:
 #                      inputs:
 #                        delaySeconds: 60
         run: |
-          echo "$AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML" > input.yaml
-          cat input.yaml
           aws imagebuilder create-component \
-          --cli-input-yaml file://input.yaml
-#          --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML)
+          --cli-input-yaml file://<(echo "$AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML")
       - name: Save GITHUB_ENV
         uses: actions/upload-artifact@v3
         with:
