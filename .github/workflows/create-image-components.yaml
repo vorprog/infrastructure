@@ -117,7 +117,7 @@ jobs:
 #                      inputs:
 #                        delaySeconds: 60
         run: |
-          echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML > input.yaml
+          echo "$AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML" > input.yaml
           cat input.yaml
           aws imagebuilder create-component \
           --cli-input-yaml file://input.yaml
