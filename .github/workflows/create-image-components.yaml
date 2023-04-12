@@ -35,7 +35,7 @@ jobs:
             name: systemd-service
             version: ${{ env.SEMANTIC_VERSION }}
             platform: Linux
-            data:
+            data: |
               schemaVersion: 1.0
               parameters:
                 - param_app_name:
