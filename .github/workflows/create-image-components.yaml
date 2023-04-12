@@ -117,8 +117,9 @@ jobs:
 #                      inputs:
 #                        delaySeconds: 60
         run: |
-          aws imagebuilder create-component \
-          --cli-input-yaml ${{ env.AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML }}
+          echo "${{ env.AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML }}" > input.yaml
+          cat input.yaml
+          aws imagebuilder create-component --cli-input-yaml file://input.yaml
       - name: Save GITHUB_ENV
         uses: actions/upload-artifact@v3
         with:
