@@ -57,65 +57,65 @@ jobs:
                           - sudo dpkg --install litestream-{{ param_litestream_version}}-linux-arm64.deb
                           - wget https://github.com/${{ github.repository_owner }}/{{ param_app_name }}/releases/download/v{{ param_app_version }}/{{ param_app_version }}-linux-arm64 -O /app/app
                           - sudo apt-get install bpftrace
-                    - name: Create litestream config file
-                      action: CreateFile
-                      inputs:
-                        - path: /etc/litestream.yml
-                          content: | # https://litestream.io/reference/config/
-                            s3:
-                              bucket: ${{ github.repository_owner }}-{{ param_app_name }}-data
-                              region: {{ param_aws_region }}
-                            streams:
-                              - name: ${{ github.repository_owner }}-{{ param_app_name }}
-                                path: /app/data.db
-                                url: s3://${{ github.repository_owner }}-{{ param_app_name }}-data
-                    - name: Create bpftrace service unit file
-                      action: CreateFile
-                      inputs:
-                        - path: /etc/systemd/system/bpftrace.service
-                          content: |
-                            [Unit]
-                            Name=bpftrace
-                            After=network.target
-                            [Service]
-                            Type=simple
-                            ExecStart=/usr/bin/bpftrace /app/bpftrace/trace.bt > /var/log/bpftrace.s3.log
-                            Restart=on-failure
-                            [Install]
-                            WantedBy=multi-user.target
-                    - name: Create aws s3 sync service unit file
-                      action: CreateFile
-                      inputs:
-                        - path: /etc/systemd/system/aws-s3-sync.service
-                          content: |
-                            [Unit]
-                            Name=s3-sync-logs
-                            After=network.target
-                            [Service]
-                            Type=simple
-                            ExecStart=aws s3 sync --exclude "*" --include "*.s3.log" /var/log/ s3://${{ github.repository_owner }}-{{ param_app_name }}-logs/"%H"
-                            Restart=on-failure
-                            [Install]
-                            WantedBy=multi-user.target
-                    - name: Create main app service unit file
-                      action: CreateFile
-                      inputs:
-                        - path: /etc/systemd/system/app.service
-                          content: |
-                            [Unit]
-                            Name=app
-                            After=network.target
-                            [Service]
-                            Type=simple
-                            EnvironmentFile=/app/.env
-                            ExecStart=/app/app
-                            Restart=on-failure
-                            [Install]
-                            WantedBy=multi-user.target
-                    - name: Reboot
-                      action: Reboot
-                      inputs:
-                        delaySeconds: 60
+#                    - name: Create litestream config file
+#                      action: CreateFile
+#                      inputs:
+#                        - path: /etc/litestream.yml
+#                          content: | # https://litestream.io/reference/config/
+#                            s3:
+#                              bucket: ${{ github.repository_owner }}-{{ param_app_name }}-data
+#                              region: {{ param_aws_region }}
+#                            streams:
+#                              - name: ${{ github.repository_owner }}-{{ param_app_name }}
+#                                path: /app/data.db
+#                                url: s3://${{ github.repository_owner }}-{{ param_app_name }}-data
+#                    - name: Create bpftrace service unit file
+#                      action: CreateFile
+#                      inputs:
+#                        - path: /etc/systemd/system/bpftrace.service
+#                          content: |
+#                            [Unit]
+#                            Name=bpftrace
+#                            After=network.target
+#                            [Service]
+#                            Type=simple
+#                            ExecStart=/usr/bin/bpftrace /app/bpftrace/trace.bt > /var/log/bpftrace.s3.log
+#                            Restart=on-failure
+#                            [Install]
+#                            WantedBy=multi-user.target
+#                    - name: Create aws s3 sync service unit file
+#                      action: CreateFile
+#                      inputs:
+#                        - path: /etc/systemd/system/aws-s3-sync.service
+#                          content: |
+#                            [Unit]
+#                            Name=s3-sync-logs
+#                            After=network.target
+#                            [Service]
+#                            Type=simple
+#                            ExecStart=aws s3 sync --exclude "*" --include "*.s3.log" /var/log/ s3://${{ github.repository_owner }}-{{ param_app_name }}-logs/"%H"
+#                            Restart=on-failure
+#                            [Install]
+#                            WantedBy=multi-user.target
+#                    - name: Create main app service unit file
+#                      action: CreateFile
+#                      inputs:
+#                        - path: /etc/systemd/system/app.service
+#                          content: |
+#                            [Unit]
+#                            Name=app
+#                            After=network.target
+#                            [Service]
+#                            Type=simple
+#                            EnvironmentFile=/app/.env
+#                            ExecStart=/app/app
+#                            Restart=on-failure
+#                            [Install]
+#                            WantedBy=multi-user.target
+#                    - name: Reboot
+#                      action: Reboot
+#                      inputs:
+#                        delaySeconds: 60
         run: |
           aws imagebuilder create-component \
           --cli-input-yaml file://<(echo $AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML)
