@@ -37,7 +37,7 @@ jobs:
         env:
           AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
             name: default
-            instanceProfileName: ${{ fromJson(env.INSTANCE_PROFILE_OUTPUT).instanceProfileName }}
+            instanceProfileName: ${{ fromJson(env.INSTANCE_PROFILE_OUTPUT).InstanceProfile.InstanceProfileName }}
         run: |
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML }}" > input.yaml
           echo "INFRASTRUCTURE_CONFIGURATION_OUTPUT<<$EOF" >> $GITHUB_ENV
@@ -170,7 +170,7 @@ jobs:
             semanticVersion: ${{ github.event.inputs.app_version }}
             parentImage: ${{ fromJson(env.BASE_IMAGE_OUTPUT).ImageId }}
             components:
-              - componentArn: ${{ fromJson(env.COMPONENT_OUTPUT).componentBuildVersionArn }}
+              - componentArn: ${{ fromJson(env.COMPONENT_OUTPUT).ComponentBuildVersionArn }}
                 parameters:
                   - name: param_app_name
                     value: ${{ github.event.inputs.app_repo }}
@@ -190,8 +190,8 @@ jobs:
           AWS_IMAGEBUILDER_CREATE_IMAGE_INPUT_YAML: |
             name: ${{ github.event.inputs.app_repo }}_${{ github.event.inputs.app_version }}
             semanticVersion: ${{ github.event.inputs.app_version }}
-            recipeArn: ${{ fromJson(env.RECIPE_OUTPUT).recipeArn }}
-            infrastructureConfigurationArn: ${{ fromJson(env.INFRASTRUCTURE_CONFIGURATION_OUTPUT).infrastructureConfigurationArn }}}
+            recipeArn: ${{ fromJson(env.RECIPE_OUTPUT).RecipeArn }}
+            infrastructureConfigurationArn: ${{ fromJson(env.INFRASTRUCTURE_CONFIGURATION_OUTPUT).InfrastructureConfigurationArn }}}
         run: |
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_IMAGE_INPUT_YAML }}" > input.yaml
           echo "IMAGE_OUTPUT<<$EOF" >> $GITHUB_ENV
