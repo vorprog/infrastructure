@@ -24,11 +24,16 @@ jobs:
         with:
           key: infrastructure-state
           path: GITHUB_ENV
+      - name: Create instance profile
+        run: |
+          echo "INSTANCE_PROFILE_OUTPUT<<$EOF" >> $GITHUB_ENV
+          aws imagebuilder create-instance-profile --instance-profile-name default >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
       - name: Create infrastructure configuration
         env:
           AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
             name: default
-            instanceProfileName: default
+            instanceProfileName: ${{ fromJson(env.INSTANCE_PROFILE_OUTPUT).instanceProfileName }}
         run: |
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML }}" > input.yaml
           echo "INFRASTRUCTURE_CONFIGURATION_OUTPUT<<$EOF" >> $GITHUB_ENV
