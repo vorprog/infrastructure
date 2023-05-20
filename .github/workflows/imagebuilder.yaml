@@ -2,7 +2,11 @@ on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook
   workflow_dispatch:
     inputs:  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
       target_job:
-        default: create-recipe-and-image
+        type: choice
+        options:
+          - create-infrastucture-configuration
+          - create-component
+          - create-recipe-and-image
       app_repo:
         default: vorprog/go-api
       app_version:
@@ -27,7 +31,7 @@ jobs:
       - name: Create instance profile
         run: |
           echo "INSTANCE_PROFILE_OUTPUT<<$EOF" >> $GITHUB_ENV
-          aws imagebuilder create-instance-profile --instance-profile-name default >> $GITHUB_ENV
+          aws iam create-instance-profile --instance-profile-name default >> $GITHUB_ENV
           echo "$EOF" >> $GITHUB_ENV
       - name: Create infrastructure configuration
         env:
