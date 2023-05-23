@@ -37,6 +37,8 @@ jobs:
         run: |
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML }}" > input.yaml
           aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml | node toGithubEnv.js INFRASTRUCTURE_CONFIGURATION_OUTPUT
+          echo $INFRASTRUCTURE_CONFIGURATION_OUTPUT
+          cat github.env
   create-component:
     if: github.event.inputs.target_job == 'create-component'
     runs-on: ubuntu-latest
