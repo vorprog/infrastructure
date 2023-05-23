@@ -27,7 +27,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           key: infrastructure-state
-          path: GITHUB_ENV
+          path: "$GITHUB_ENV"
       - name: Create infrastructure configuration
         env:
           AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
@@ -35,9 +35,9 @@ jobs:
             instanceProfileName: default
         run: |
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML }}" > input.yaml
-          echo "INFRASTRUCTURE_CONFIGURATION_OUTPUT<<$EOF" >> $GITHUB_ENV
-          aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml >> $GITHUB_ENV
-          echo "$EOF" >> $GITHUB_ENV
+          echo "INFRASTRUCTURE_CONFIGURATION_OUTPUT<<$EOF" >> "$GITHUB_ENV"
+          aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml >> "$GITHUB_ENV"
+          echo "$EOF" >> "$GITHUB_ENV"
   create-component:
     if: github.event.inputs.target_job == 'create-component'
     runs-on: ubuntu-latest
