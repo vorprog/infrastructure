@@ -24,6 +24,7 @@ jobs:
     if: github.event.inputs.target_job == 'create-infrastucture-configuration'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
           key: infrastructure-state
@@ -35,7 +36,7 @@ jobs:
             instanceProfileName: default
         run: |
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML }}" > input.yaml
-          aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml | node toGithubEnv.js
+          aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml | node toGithubEnv.js INFRASTRUCTURE_CONFIGURATION_OUTPUT
   create-component:
     if: github.event.inputs.target_job == 'create-component'
     runs-on: ubuntu-latest
