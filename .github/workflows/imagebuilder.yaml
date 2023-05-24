@@ -29,7 +29,7 @@ jobs:
         with:
           key: infrastructure-state
           path: github.env
-      - run: cat github.env >> $GITHUB_ENV
+      - run: cat github.env >> "$GITHUB_ENV"
       - name: Create infrastructure configuration
         env:
           AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
