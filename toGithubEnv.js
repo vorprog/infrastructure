@@ -12,6 +12,6 @@ stdin.on('data', function(chunk) {
 stdin.on('end', function() {
   console.log(data);
   let delimiter = `EOF_${crypto.randomBytes(20).toString('hex')}_EOF`;
-  fs.appendFileSync('$GITHUB_ENV', `${process.argv[2]}<<${delimiter}\n${data}\n${delimiter}`);
-  fs.cpSync('$GITHUB_ENV', 'github.env');
+  fs.appendFileSync(process.env.GITHUB_ENV, `${process.argv[2]}<<${delimiter}\n${data}\n${delimiter}`);
+  fs.cpSync(process.env.GITHUB_ENV, "github.env");
 });
