@@ -25,23 +25,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          key: infrastructure-state
-          path: github.env
-      - run: cat github.env >> "$GITHUB_ENV" || true
+      - run: |
+          aws s3 cp s3://vorprog-github-env/github.env github.env
+          cat github.env >> "$GITHUB_ENV"
       - name: Create infrastructure configuration
         env:
           AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
             name: default
             instanceProfileName: default
         run: |
-          echo ${{ env.INFRASTRUCTURE_CONFIGURATION_OUTPUT }}
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML }}" > input.yaml
           aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml | node toGithubEnv.js INFRASTRUCTURE_CONFIGURATION_OUTPUT
-          echo $GITHUB_ENV
-          cat $GITHUB_ENV
-          cat github.env
+          aws s3 cp "$GITHUB_ENV" s3://vorprog-github-env/github.env
   create-component:
     if: github.event.inputs.target_job == 'create-component'
     runs-on: ubuntu-latest
