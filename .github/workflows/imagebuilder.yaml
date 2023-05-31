@@ -7,6 +7,7 @@ on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook
           - create-infrastucture-configuration
           - create-component
           - create-recipe-and-image
+          - build-image
       app_repo:
         default: vorprog/go-api
       app_version:
@@ -193,3 +194,121 @@ jobs:
           echo "IMAGE_OUTPUT<<$EOF" >> $GITHUB_ENV
           aws imagebuilder create-image --cli-input-yaml file://input.yaml >> $GITHUB_ENV
           echo "$EOF" >> $GITHUB_ENV
+  build-image:
+    if: github.event.inputs.target_job == 'build-image'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-qemu-action@master
+        with: 
+          platforms: 'arm64,arm'
+      - uses: hashicorp/setup-packer@main
+      - uses: actions/checkout@main
+      - name: set packer file
+        env:
+          ISO_URL: http://www.releases.ubuntu.com/20.04/ubuntu-20.04.2-live-server-amd64.iso
+          ISO_CHECKSUM: sha256:d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423
+          PACKER_YAML: | # https://www.puppeteers.net/blog/two-stage-qemu-builds-with-packer/
+            required_plugins: # https://developer.hashicorp.com/packer/docs/plugins/install-plugins
+              qemu: # https://github.com/hashicorp/packer-plugin-qemu
+                source: github.com/hashicorp/qemu
+                version: ">= 1.0.9"
+            builders: # https://developer.hashicorp.com/packer/docs/templates/legacy_json_templates/builders
+              - name: iso
+                type: qemu # https://developer.hashicorp.com/packer/plugins/builders/qemu
+                qemu_binary: qemu-system-aarch64
+                qemuargs:
+                    - [ "-m", "2048M" ]
+                    - [ "-cpu", "host" ]
+                    - [ "-machine", "virt,gic-version=max,accel=kvm" ]
+                    - [ "-boot", "strict=on" ]
+                    - [ "-bios", "/usr/share/AAVMF/AAVMF_CODE.fd" ]
+                    - [ "-monitor", "none" ]
+                memory: 2048M # 1280
+                accelerator: kvm
+                vm_name: ubuntu-iso-build
+                output_directory: ubuntu-iso-output
+                iso_url: ${{ env.ISO_URL }}
+                iso_checksum: ${{ env.ISO_CHECKSUM }}
+                disk_image: false
+                disk_size: 5000M
+                disk_interface: virtio # virtio-scsi
+                format: qcow2
+                net_device: virtio-net
+                headless: true
+                http_directory: ubuntu/http # http
+                shutdown_command: "echo 'packer' | sudo -S shutdown -P now" # shutdown -P now
+                ssh_username: root # openvpnas
+                ssh_password: ubuntu
+                ssh_timeout: 1200s
+                # vnc_bind_address: 0.0.0.0
+                boot_wait: 10s
+                boot_command:
+                  - " <up><wait>" # Make the language selector appear...
+                  - " <up><wait><esc><wait>"  # ...then get rid of it
+                  - "<f6><wait><esc><wait>" # Go to the other installation options menu and leave it
+                  # Remove the kernel command-line that already exists
+                  - "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>"
+                  - "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>"
+                  - "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>"
+                  # Add kernel command-line and start install
+                  - "/casper/vmlinuz "
+                  - "initrd=/casper/initrd "
+                  - "autoinstall "
+                  - "ds=nocloud-net;s=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu/ "
+                  - "<enter>"
+                # - c<wait>
+                # - linux /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=OL-8-2-0-BaseOS-aarch64 ro
+                # - 'inst.text biosdevname=0 net.ifnames=0 '
+                # - ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ol82-ks.cfg<enter>
+                # - initrd /images/pxeboot/initrd.img<enter>
+                # - boot<enter><wait>
+              - name: img
+                type: qemu
+                qemu_binary: qemu-system-aarch64
+                qemuargs:
+                    - [ "-m", "2048M" ]
+                    - [ "-cpu", "host" ]
+                    - [ "-machine", "virt,gic-version=max,accel=kvm" ]
+                    - [ "-boot", "strict=on" ]
+                    - [ "-bios", "/usr/share/AAVMF/AAVMF_CODE.fd" ]
+                    - [ "-monitor", "none" ]
+                memory: 2048M # 1280
+                accelerator: kvm
+                vm_name: ubuntu-img-build
+                output_directory: ubuntu-img-output
+                iso_url: ubuntu-iso-output/ubuntu-iso-build
+                iso_checksum: none # Checking the checksum would be pointless as we just built the source image
+                disk_image: true
+                disk_size: 5000M
+                disk_interface: virtio
+                format: qcow2
+                net_device: virtio-net
+                headless: true
+                shutdown_command: echo 'packer' | sudo -S shutdown -P now
+                ssh_username: root # openvpnas
+                ssh_password: ubuntu
+                ssh_timeout: 60m
+                boot_wait: 10s
+            provisioners: # https://developer.hashicorp.com/packer/docs/provisioners/shell
+              - pause_before: 5s
+                type: shell 
+                inline:
+                  - apt-get update
+                  - apt-get install -y qemu-guest-agent
+                  - mkdir /etc/cloud
+                  - touch /etc/cloud/cloud-init.disabled
+                  - apt-get install -y cloud-init
+                  - rm /etc/cloud/cloud-init.disabled
+            post-processors: # https://developer.hashicorp.com/packer/docs/post-processors/manifest
+              - type: manifest
+                output: output.json
+        run: |
+          yq $PACKER_YAML --output-format json > packer.json
+      - name: Run `packer init`
+        run: |
+          packer init ./packer.json
+          packer validate ./packer.json
+          packer build ./packer.json
+          packer build -only=img.* ubuntu
+          packer build -only=iso.* ubuntu
+          aws s3 cp ubuntu-img-output/ubuntu-img-build s3://${{ env.S3_IMAGE_BUCKET}}/ubuntu-img-build.${{ github.event.inputs.app_version }}
