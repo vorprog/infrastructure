@@ -13,5 +13,8 @@ stdin.on('end', function() {
   console.log(data);
   let delimiter = `EOF_${crypto.randomBytes(20).toString('hex')}_EOF`;
   fs.appendFileSync(process.env.GITHUB_ENV, `${process.argv[2]}<<${delimiter}\n${data}\n${delimiter}`);
-  fs.cpSync(process.env.GITHUB_ENV, "github.env");
+
+  const content = fs.readFileSync("github.env");
+  const state = JSON.parse(content.toString());
+  state[process.argv[2]] = data;
 });

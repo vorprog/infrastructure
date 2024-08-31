@@ -14,7 +14,6 @@ on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook
         default: '0.0.0'
 defaults: { run: { shell: 'bash -ex {0}' } } # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 env:
-  EOF: _EOF_${{ github.run_number }}_
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_DEFAULT_REGION: us-west-2
@@ -26,28 +25,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          aws s3 cp s3://vorprog-github-env/github.env github.env
-          cat github.env >> "$GITHUB_ENV"
-      - name: Create infrastructure configuration
-        env:
+      - env:
           AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
             name: default
             instanceProfileName: default
         run: |
-          echo "infra thing is ${{ env.INFRASTRUCTURE_CONFIGURATION_OUTPUT }}"
-          echo "blaaa"
           echo "${{ env.AWS_IMAGEBUILDER_CREATE_INFRASTRUCTURE_CONFIGURATION_INPUT_YAML }}" > input.yaml
-          aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml | node toGithubEnv.js INFRASTRUCTURE_CONFIGURATION_OUTPUT
-          aws s3 cp "$GITHUB_ENV" s3://vorprog-github-env/github.env
+          aws imagebuilder create-infrastructure-configuration --cli-input-yaml file://input.yaml
   create-component:
     if: github.event.inputs.target_job == 'create-component'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v3
-        with:
-          key: infrastructure-state
-          path: GITHUB_ENV
+      - uses: actions/checkout@v3
       - name: Create component
         env:
           AWS_IMAGEBUILDER_CREATE_COMPONENT_INPUT_YAML: | # https://docs.aws.amazon.com/imagebuilder/latest/userguide/toe-use-documents.html
@@ -144,22 +133,31 @@ jobs:
     if: github.event.inputs.target_job == 'create-recipe-and-image'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v3
-        with:
-          key: infrastructure-state
-          path: GITHUB_ENV
-      - name: Get latest litestream version
+      - uses: actions/checkout@main
+      - name: Download dependencies
         run: |
-          echo "LITESTREAM_VERSION_OUTPUT<<$EOF" >> $GITHUB_ENV
-          gh api repos/benbjohnson/litestream/releases/latest --jq '.tag_name' | tr -d '"' >> $GITHUB_ENV
-          echo "$EOF" >> $GITHUB_ENV
+          gh api repos/benbjohnson/litestream/releases/latest --jq '.tag_name' | tr -d '"' | ghenv LITESTREAM_VERSION_OUTPUT
+          gh api ...
       - name: Get base image
         run: | # https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
-          echo "BASE_IMAGE_OUTPUT<<$EOF" >> $GITHUB_ENV
           aws ec2 describe-images \
           --filters "Name=name,Values=${{ env.BASE_AMI_NAME_PREFIX }}-*" "Name=owner-id,Values=${{ env.BASE_AMI_OWNER_ID }}" \
-          --query 'sort_by(Images, &CreationDate)[-1]' >> $GITHUB_ENV
-          echo "$EOF" >> $GITHUB_ENV
+          --query 'sort_by(Images, &CreationDate)[-1]' | ./ghenv.sh BASE_IMAGE_OUTPUT
+      - name: Get security-group
+        run: |
+          aws ec2 describe-security-groups --filters "Name=group-name,Values=ssh-access" --query 'SecurityGroups[0]' | ghenv SECURITY_GROUP_OUTPUT
+      - name: Startup ec2 image
+        env:
+          AWS_EC2_RUN_INSTANCES_OUTPUT_YAML: |
+            ImageId: ${{ fromJson(env.BASE_IMAGE_OUTPUT).ImageId }}
+            InstanceType: t4g.micro
+            KeyName: vorprog
+            SecurityGroupIds:
+              - ${{ fromJson(env.SECURITY_GROUP_OUTPUT).GroupId }}
+            SubnetId: subnet-0e0e0e0e0e0e0e0e0
+        run: |
+          echo ${{ env.AWS_EC2_RUN_INSTANCES_OUTPUT_YAML }} > input.yaml
+          aws ec2 run-instances --cli-input-yaml file://input.yaml --query 'Instances[0]' | ./ghenv.sh EC2_INSTANCE_OUTPUT
       - name: Create recipe
         env:
           AWS_IMAGEBUILD_CREATE_RECIPE_INPUT_YAML: |
